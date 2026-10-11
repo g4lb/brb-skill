@@ -34,9 +34,17 @@ Read the first word of the arguments:
 | `help` | `BRB help` |
 | `continue` or `resume` | Do not use this skill. Invoke the BRB resume skill instead, passing any checkpoint id: it is `brb:continue` when BRB is installed as a plugin, and `continue` when its skills are installed on their own. |
 
-For all actions except the pause flow: run the command, show the output to the developer, and stop.
+For all actions except the pause flow: run the command with the Bash `description` **BRB · <action>** (for example **BRB · status**), copy its output into your reply inside a ```text code block, and stop.
 
 ## Pause flow
+
+### 0. Tell the developer right away
+
+Before any tool call, write this one line so the developer sees that BRB started:
+
+> ⏸ BRB — pausing. Saving where we are…
+
+Use the Bash `description` **BRB · saving checkpoint** for the save command, so the progress line in the terminal reads as BRB.
 
 ### 1. Stop at a safe point
 
@@ -85,7 +93,7 @@ If the shell does not support `<<'BRB_JSON'` here-documents (for example PowerSh
 
 ### 4. Report the result
 
-- **Exit code 0:** show the developer the tool's output, as written. Do not add counts, percentages, or checks that the output does not contain.
+- **Exit code 0:** the terminal may collapse tool output, so copy the tool's output into your reply, exactly as written, inside a ```text code block. Do not add counts, percentages, or checks that the output does not contain. Add nothing after it except, if needed, the partial-save note below.
 - If the output says **"partially saved"**: tell the developer which fields are missing. Offer to save again with them.
 - **Exit code not 0:** the checkpoint was **not** saved. Show the error and the hint from the output. Do not say the checkpoint is saved. If the error is about the JSON, fix the JSON and try again once.
 

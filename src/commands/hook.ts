@@ -12,6 +12,7 @@ import { errorMessage } from '../utils/errors.js';
 import { isPlainObject } from '../utils/json.js';
 import { ensurePrivateDir } from '../utils/fs.js';
 import { latestUnresumed } from './resume.js';
+import { DATA_TAG, safeLine } from '../security/sanitize.js';
 import { relativeTime, resolveProject, shortId, type CommandContext } from './common.js';
 
 /**
@@ -24,8 +25,8 @@ import { relativeTime, resolveProject, shortId, type CommandContext } from './co
  * - Exits 1 (non-blocking error, shown as a hook error notice) when saving failed.
  */
 
-export type HookEvent = 'pre-compact' | 'session-end' | 'session-start' | 'post-tool-use';
-export const HOOK_EVENTS: readonly HookEvent[] = ['pre-compact', 'session-end', 'session-start', 'post-tool-use'];
+export type HookEvent = 'pre-compact' | 'session-end' | 'session-start' | 'post-tool-use' | 'post-bash';
+export const HOOK_EVENTS: readonly HookEvent[] = ['pre-compact', 'session-end', 'session-start', 'post-tool-use', 'post-bash'];
 
 const DEDUPE_WINDOW_MS = 60_000;
 const MILESTONE_MIN_INTERVAL_MS = 10 * 60_000;
@@ -44,6 +45,7 @@ interface HookInput {
   agent_id?: string | null;
   tool_name?: string;
   tool_input?: unknown;
+  tool_response?: unknown;
 }
 
 export function cmdHook(argv: string[], ctx: CommandContext): number {
@@ -69,6 +71,9 @@ export function cmdHook(argv: string[], ctx: CommandContext): number {
     void _omit;
     appendLog(ctx, 'hooks-debug.log', `${event} ${JSON.stringify(meta)}`);
   }
+
+  // Display-only; needs no project and must never fail.
+  if (event === 'post-bash') return postBash(input, ctx);
 
   const cwd = typeof input.cwd === 'string' && path.isAbsolute(input.cwd) ? input.cwd : (ctx.env.CLAUDE_PROJECT_DIR ?? ctx.cwd);
   let project: ProjectIdentity;
@@ -185,6 +190,52 @@ function postToolUse(project: ProjectIdentity, input: HookInput, ctx: CommandCon
     return true;
   });
   return due ? autoCheckpoint(project, input, 'milestone', ctx) : 0;
+}
+
+/**
+ * After BRB's own save/resume command, show its status block to the developer
+ * as a system message. Claude Code collapses tool output, and models sometimes
+ * skip copying it, so this makes progress visible regardless of the model.
+ * Claude is told the block is already on screen so it does not repeat it.
+ */
+function postBash(input: HookInput, ctx: CommandContext): number {
+  const ti = isPlainObject(input.tool_input) ? input.tool_input : {};
+  const command = typeof ti.command === 'string' ? ti.command : '';
+  if (!/brb\.mjs["']?\s+(save|resume|continue)\b/.test(command)) return 0;
+  const tr = isPlainObject(input.tool_response) ? input.tool_response : {};
+  const stdout = typeof tr.stdout === 'string' ? tr.stdout : '';
+  const status = statusBlock(stdout);
+  if (!status) return 0;
+  // Claude Code prefixes every line of a system message, so the status is condensed to one line.
+  ctx.stdout(JSON.stringify({ systemMessage: status }));
+  return 0;
+}
+
+const STEP_LINE = /^ {2}([✓!✗–]) (\S+) +(.*)$/;
+
+/**
+ * Condense BRB save/resume output to one line, e.g.
+ * "BRB — Checkpoint found: ✓ Integrity verified · ! Repository CHANGES DETECTED · ✓ Resume READY".
+ * Returns null for anything that is not BRB save/resume output.
+ */
+export function statusBlock(stdout: string): string | null {
+  const header = /^BRB — (Checkpoint saved|Checkpoint partially saved|Checkpoint found|No checkpoint found for this project\.|.+)/.exec(stdout.split('\n')[0] ?? '');
+  if (!header || !stdout.startsWith('BRB — ')) return null;
+  const end = stdout.indexOf(`<${DATA_TAG}`);
+  const steps: string[] = [];
+  for (const line of (end >= 0 ? stdout.slice(0, end) : stdout).split('\n')) {
+    const m = STEP_LINE.exec(line);
+    if (!m) continue;
+    const [, mark, label, detail] = m;
+    if (label === 'Project' || label === 'Found' || label === 'Context' && mark === '✓') continue; // covered by the header or the summary
+    const parts = (detail ?? '').split(/ — | · |; /);
+    let short = parts[0] ?? '';
+    if (label === 'Task') short = mark === '✓' ? (parts[parts.length - 1] ?? '') : parts.filter((p) => p.endsWith('missing')).join(', ');
+    if (label === 'Privacy' && mark === '✓') short = 'clean';
+    steps.push(`${mark} ${label} ${short.slice(0, 48)}`.trim());
+  }
+  const title = (stdout.split('\n')[0] ?? '').replace(/\.$/, '');
+  return safeLine(steps.length > 0 ? `${title}: ${steps.join(' · ')}` : title);
 }
 
 function sessionStart(project: ProjectIdentity, input: HookInput, ctx: CommandContext): number {

@@ -2,27 +2,28 @@
 
 A lightweight Claude Code plugin for pausing and resuming AI-assisted development.
 
-Type `/brb` before you step away. Type `/brb:continue` when you're back. BRB saves a structured, local checkpoint: the objective, what's done, what's left, the exact next step, decisions, test results and repository state. A new Claude Code session can then pick up the task without you explaining it again.
+Type `/brb` before you step away. Type `/brb continue` (or `/brb:continue`) when you're back. BRB saves a structured, local checkpoint: the objective, what's done, what's left, the exact next step, decisions, test results and repository state. A new Claude Code session can then pick up the task without you explaining it again.
 
 ```text
 > /brb
 
+⏸ BRB — pausing. Saving where we are…
+
 BRB — Checkpoint saved
 
-Project: my-awesome-app
-Branch: feature/authentication
-Checkpoint: 9410b410
+  ✓ Project      my-awesome-app · feature/authentication @ 559b7d92
+  ✓ Repository   2 changed paths recorded · 2 files fingerprinted
+  ✓ Task         objective · next step · 3 done, 1 in progress, 2 left
+  ✓ Context      2 decisions · 1 blocker · 1 test result · 2 key files
+  ✓ Privacy      no secret-like values found
+  ✓ Stored       checkpoint f726a311 · 62 ms
+                 ~/.brb/projects/my-awesome-app-79903013a9ac/checkpoints/…-manual-f726a311.json
 
-✓ Development objective captured
-✓ 7 changed file paths recorded
-✓ Tasks saved: 3 completed, 1 in progress, 2 remaining
-✓ 2 decision(s), 0 blocker(s), 1 test result(s) recorded
-✓ Next action identified
-
-Next: Finish token refresh handling in src/auth/refresh.ts
+Next → In src/auth/refresh.ts, wire refreshToken() into the fetch wrapper so a 401
+       triggers one refresh and a retry; then run npm test.
 
 You can leave now.
-Run /brb:continue when you're back.
+Run /brb continue when you're back.
 ```
 
 ---
@@ -101,7 +102,7 @@ Clone the repository and load the `plugin/` folder with `--plugin-dir` as shown 
 npx skills add g4lb/brb-skill
 ```
 
-This installs the two skills on their own, without the plugin system. You get `/brb` (pause) and `/brb continue` (resume) with the same checkpoints and repository checks. **Not included:** Auto-BRB and the resume hint, because those need plugin hooks. For the full feature set, use the plugin install above. In this mode the resume skill is named `continue`, which Claude Code's built-in `/continue` shadows, so resume with `/brb continue` or by saying "I'm back".
+This installs the two skills on their own, without the plugin system. You get `/brb` (pause) and `/brb continue` (resume) with the same checkpoints and repository checks. **Not included:** Auto-BRB and the resume hint, because those need plugin hooks. For the full feature set, use the plugin install above. In this mode, resume with `/continue`, `/brb continue` or by saying "I'm back".
 
 ## Getting started
 
@@ -126,33 +127,43 @@ That's it. Everything else is optional.
 | `/brb delete <id>` | Delete one checkpoint (asks first). |
 | `/brb export` | Print all of this project's checkpoints as one JSON document. |
 
-> **Why `/brb:continue` and not `/continue`?** Claude Code already has a built-in `/continue` command (an alias for resuming a past *conversation*). A plugin can't override a built-in command, so BRB's resume skill is `/brb:continue`. Plain-language requests such as "I'm back" also work. `/brb` itself has no conflict.
+> **About `/continue`.** With a skills-CLI install, the resume skill is a standalone skill named `continue`, and typing `/continue` in an interactive session runs it. As a plugin, the skill is `/brb:continue`. In non-interactive `claude -p` runs, Claude Code reports `/continue` as unavailable. `/brb continue` and plain language ("I'm back") work in every mode.
 
 Natural-language activation is **best effort**. Claude decides whether a phrase matches. Slash commands always work.
 
 ## Resuming
 
 ```text
-> /brb:continue
+> /brb continue
 
-Welcome back!
+▶ BRB — welcome back. Loading your checkpoint…
 
-Project: my-awesome-app
-Task: Implement authentication
+BRB — Checkpoint found
+
+  ✓ Found        my-awesome-app · f726a311 · manual · saved 2 h ago · feature/authentication
+                 Selected because: latest checkpoint on branch feature/authentication (manual)
+  ✓ Integrity    verified
+  ✓ Context      objective · next step · 3 done, 1 in progress, 2 left
+  ! Repository   CHANGES DETECTED — repository changed since the checkpoint
+                 Now on feature/authentication at e8537645
+                 - 1 new commit(s) since the checkpoint (559b7d92..e8537645).
+                 - Edited after the checkpoint (re-read before changing): src/auth/refresh.ts.
+  ✓ Resume       READY — picking up where you left off
+
+Task: Implement authentication: login, token storage and token refresh.
 
 Completed:
 ✓ Login flow
 ✓ Token storage
-✓ Error handling
+✓ Error handling for 401 responses
 
 Next:
-→ Finish token refresh handling in src/auth/refresh.ts
+→ Wire refreshToken() into the fetch wrapper in src/auth/refresh.ts
 
-Repository check: CHANGES DETECTED — 1 new commit since the checkpoint;
-src/auth/refresh.ts was edited after the checkpoint (I'll re-read it first).
-
-Continuing with the token refresh handling…
+Re-reading src/auth/refresh.ts first, since it changed while you were away…
 ```
+
+With the plugin install, Claude Code also shows a one-line status from a BRB hook right after the helper runs, for example `BRB — Checkpoint found: ✓ Integrity verified · ! Repository CHANGES DETECTED · ✓ Resume READY`. That line doesn't depend on the model. Each line is one step BRB actually performed. **✓** means done, **!** means look at this, **✗** means missing or a conflict, and **–** means it doesn't apply. The marks and counts come from the helper, not from Claude, so they never claim more than what happened.
 
 On resume, BRB:
 
@@ -240,7 +251,7 @@ Node.js 20 and 22 are tested.
 ## Limitations
 
 - **Not a memory restore.** BRB preserves explicit task context and repository metadata. It doesn't restore Claude's conversation, hidden reasoning or the memory of running processes. A resumed session may still need to read files or ask you something.
-- **`/continue` is taken.** Use `/brb:continue`, `/brb continue` or natural language (see [Commands](#commands)).
+- **`/continue` depends on the install mode.** It works interactively with the skills-CLI install. Plugin installs use `/brb:continue`. `/brb continue` always works (see [Commands](#commands)).
 - **Skills-CLI installs have no hooks.** `npx skills add` copies only the skills, so Auto-BRB and the resume hint are unavailable there.
 - **Automatic checkpoints are extractive.** They rely on the transcript file. Its format is internal to Claude Code and may change. If parsing fails, BRB still saves repository state and marks the task context as unavailable.
 - **Running processes are not inspected.** BRB records the processes Claude reports (for example, a dev server it started). It doesn't read the OS process table or restart anything.

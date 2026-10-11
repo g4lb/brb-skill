@@ -9,6 +9,7 @@ import { loadConfig } from '../config/config.js';
 import { readRegularFile } from '../utils/fs.js';
 import { BrbError, errorMessage } from '../utils/errors.js';
 import { flagString, parseArgs, resolveProject, shortId, type CommandContext } from './common.js';
+import { elapsed, plural, step, sub, tildePath } from './ui.js';
 
 const MAX_INPUT_BYTES = 1024 * 1024;
 
@@ -17,6 +18,7 @@ const MAX_INPUT_BYTES = 1024 * 1024;
  * arrives as JSON on stdin or via --input; repository state is collected here.
  */
 export function cmdSave(argv: string[], ctx: CommandContext): number {
+  const started = performance.now();
   const { flags } = parseArgs(argv, ['json']);
   const project = resolveProject(ctx.cwd, ctx.env);
 
@@ -63,34 +65,41 @@ export function cmdSave(argv: string[], ctx: CommandContext): number {
     return 0;
   }
 
+  const t = checkpoint.task;
   const lines: string[] = [];
   lines.push(missing.length > 0 ? 'BRB — Checkpoint partially saved' : 'BRB — Checkpoint saved');
   lines.push('');
-  lines.push(`Project: ${project.name}`);
-  if (git.available) lines.push(`Branch: ${git.branch ?? `(detached at ${git.head?.slice(0, 8) ?? 'no commits'})`}`);
-  else lines.push(`Git: unavailable (${git.reason})`);
-  lines.push(`Checkpoint: ${shortId(checkpoint)}`);
-  lines.push('');
-  const t = checkpoint.task;
-  lines.push(t.objective ? '✓ Development objective captured' : '✗ Development objective missing');
+  const where = git.available ? `${git.branch ?? 'detached HEAD'} @ ${git.head?.slice(0, 8) ?? 'no commits'}` : 'no git';
+  lines.push(step('✓', 'Project', `${project.name} · ${where}`));
   if (git.available) {
     const wt = git.workingTree;
     const n = wt.modified.length + wt.added.length + wt.deleted.length + wt.renamed.length + wt.untracked.length + wt.conflicted.length;
-    lines.push(`✓ ${n} changed file path${n === 1 ? '' : 's'} recorded${wt.truncated ? ` (capped; git reported ${wt.total})` : ''}`);
+    const hashed = checkpoint.snapshot.files.filter((f) => f.sha256 !== null).length;
+    const capped = wt.truncated ? ` (capped; git reported ${wt.total})` : '';
+    lines.push(step('✓', 'Repository', n === 0 ? 'working tree clean' : `${plural(n, 'changed path')} recorded${capped} · ${plural(hashed, 'file')} fingerprinted`));
+  } else {
+    lines.push(step('–', 'Repository', `git unavailable (${git.reason}); relevant files fingerprinted only`));
   }
-  lines.push(`✓ Tasks saved: ${t.completed.length} completed, ${t.inProgress.length} in progress, ${t.remaining.length} remaining`);
-  if (checkpoint.decisions.length + checkpoint.blockers.length + checkpoint.tests.length > 0) {
-    lines.push(`✓ ${checkpoint.decisions.length} decision(s), ${checkpoint.blockers.length} blocker(s), ${checkpoint.tests.length} test result(s) recorded`);
-  }
-  lines.push(t.nextAction ? '✓ Next action identified' : '✗ Next action missing');
-  if (checkpoint.redactions > 0) lines.push(`! ${checkpoint.redactions} value(s) that looked like secrets were redacted`);
-  if (result.handoffError) lines.push(`! Handoff file could not be written (${result.handoffError}); the checkpoint itself is saved`);
-  for (const e of configErrors) lines.push(`! ${e}`);
+  const taskParts = [
+    t.objective ? 'objective' : 'objective missing',
+    t.nextAction ? 'next step' : 'next step missing',
+    `${t.completed.length} done, ${t.inProgress.length} in progress, ${t.remaining.length} left`,
+  ];
+  lines.push(step(missing.length > 0 ? '✗' : '✓', 'Task', taskParts.join(' · ')));
+  const ctxParts = [plural(checkpoint.decisions.length, 'decision'), plural(checkpoint.blockers.length, 'blocker'), plural(checkpoint.tests.length, 'test result')];
+  if (checkpoint.files.length > 0) ctxParts.push(plural(checkpoint.files.length, 'key file'));
+  lines.push(step('✓', 'Context', ctxParts.join(' · ')));
+  lines.push(checkpoint.redactions > 0
+    ? step('!', 'Privacy', `${checkpoint.redactions} value(s) that looked like secrets were redacted`)
+    : step('✓', 'Privacy', 'no secret-like values found'));
+  if (result.handoffError) lines.push(step('!', 'Handoff', `could not be written (${result.handoffError}); the checkpoint itself is saved`));
+  if (config.autoBRB.enabled) lines.push(step('✓', 'Auto-BRB', 'on'));
+  lines.push(step('✓', 'Stored', `checkpoint ${shortId(checkpoint)} · ${elapsed(started)}`));
+  lines.push(sub(tildePath(result.file)));
+  for (const e of configErrors) lines.push(step('!', 'Config', e));
   lines.push('');
-  if (t.nextAction) lines.push(`Next: ${firstLine(t.nextAction)}`);
+  if (t.nextAction) lines.push(`Next → ${firstLine(t.nextAction)}`);
   if (missing.length > 0) lines.push(`Missing: ${missing.join(', ')}. Run /brb again with these details for a complete checkpoint.`);
-  lines.push(`Saved to: ${result.file}`);
-  if (config.autoBRB.enabled) lines.push('Auto-BRB: on');
   lines.push('');
   lines.push(missing.length > 0 ? 'The checkpoint is usable, but incomplete.' : 'You can leave now.');
   lines.push('Run /brb continue when you\'re back.');

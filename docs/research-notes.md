@@ -7,7 +7,7 @@ These notes record what Claude Code supports, as verified while building BRB 1.0
 | Capability | Finding | How it was verified |
 | --- | --- | --- |
 | Plugin skills as slash commands | `skills/<name>/SKILL.md` in plugin `brb` becomes `/brb:<name>`. The bare `/<name>` also works unless another command already uses the name. | `/brb status` and `/brb:continue` ran through `claude -p --plugin-dir`. |
-| `/continue` | **Taken by a Claude Code built-in.** Without the plugin, `claude -p "/continue"` reports "/continue isn't available in this environment", the same as `/resume`. So BRB's resume skill is `/brb:continue`. | Experiment |
+| `/continue` | In non-interactive `claude -p`, `/continue` (like `/resume`) is reported as "isn't available in this environment". **In an interactive session, a standalone skill named `continue` (skills-CLI install) does run on `/continue`.** Plugin installs expose the skill as `/brb:continue`. `/brb continue` works in every mode. | `claude -p` experiment; interactive `/continue` ran BRB's skill on 2026-10-11 |
 | Skill substitutions | `${CLAUDE_SKILL_DIR}`, `${CLAUDE_SESSION_ID}` and `$ARGUMENTS` are substituted in skill content, both for plugin skills and for standalone skills in `.claude/skills/`. | E2E in both install modes; the session id was recorded in a saved checkpoint. |
 | Skills CLI (`npx skills add`) | Discovers skills through `.claude-plugin/marketplace.json`, copies each skill folder (including `scripts/`) into `.claude/skills/<name>/`, and does not install hooks. It reports anonymous install telemetry for public repositories, which is how skills.sh lists them. Opt out with `DISABLE_TELEMETRY=1`. | Isolated install test with telemetry off |
 | Natural-language activation | "I need to leave, be right back" made Claude invoke the `brb` skill. | E2E session 1 |
@@ -19,6 +19,9 @@ These notes record what Claude Code supports, as verified while building BRB 1.0
 | `claude plugin validate --strict` | Passes for the marketplace (repository root) and the plugin (`plugin/`). | Local run |
 | Dependency install | Claude Code runs `npm install` (including dev dependencies) in an installed plugin that has a `package.json`. BRB's plugin folder therefore has none. | Fresh install from GitHub produced a 47 MB `node_modules` before the layout change |
 | Transcript format | JSONL with `type: user/assistant`, `message.content`, `isMeta`, `isSidechain`, `isCompactSummary`, `timestamp`; task tools `TodoWrite` (`input.todos`) and `TaskCreate`/`TaskUpdate` (results contain `Task #N created`). **The docs state that this format is internal and may change.** | Local transcripts |
+
+| Hook `systemMessage` display | PostToolUse `systemMessage` is shown to the user. Claude Code prefixes **each line** with `PostToolUse:Bash says:`, so BRB sends one line. The `if` filter (`Bash(node *brb.mjs*)`) limits the hook to BRB's own commands. | stream-json `system/informational` event |
+| Skill message ordering | Asked to post a status message before continuing, Sonnet and Opus in `claude -p` often skip it and summarize only at the end. The pre-tool announcement line is followed reliably. The hook line makes the status visible regardless. | Repeated `claude -p` runs |
 
 ## From documentation (not independently exercised)
 
@@ -37,4 +40,4 @@ These notes record what Claude Code supports, as verified while building BRB 1.0
 | Generic "task completion" detection | Approximated only by task-list completion (`onMilestone`, off by default). |
 | Asking Claude to summarize from a hook | Hooks run outside the model turn. Automatic checkpoints are extractive and never invent objectives. |
 | Inspecting OS processes | Not done. BRB records only the processes Claude reports. |
-| Registering a bare `/continue` | Not possible (built-in). |
+| Bare `/continue` for the plugin install | Not verified interactively; documented as `/brb:continue`. |

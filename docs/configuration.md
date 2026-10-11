@@ -73,5 +73,6 @@ The plugin always registers its hooks (`plugin/hooks/hooks.json`). The hooks rea
 | `SessionEnd` | all | 10 s | `brb hook session-end` |
 | `SessionStart` | `startup\|clear\|compact` | 10 s | `brb hook session-start` |
 | `PostToolUse` | `TodoWrite\|TaskUpdate` | 10 s | `brb hook post-tool-use` |
+| `PostToolUse` | `Bash`, only when `if: Bash(node *brb.mjs*)` matches | 10 s | `brb hook post-bash`: shows a one-line status after BRB's own save/resume command. Always on; display only. |
 
 Claude Code gives all `SessionEnd` hooks a shared 1.5-second budget by default. Declaring a 10-second timeout raises that budget (up to Claude Code's 60-second maximum).

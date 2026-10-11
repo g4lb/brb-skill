@@ -11,6 +11,8 @@ All notable changes to this project are documented here. This project follows [S
 
 ### Added
 
+- Plugin hook `post-bash` (PostToolUse on Bash, filtered with `if: Bash(node *brb.mjs*)`) shows a one-line BRB status in the terminal after save/resume, independent of the model.
+- Step-by-step status output for save and resume (✓ ! ✗ – marks, timing, aligned columns). The skills announce themselves before running, label their terminal progress line "BRB · …", and show the helper's status block verbatim.
 - Install with the skills CLI: `npx skills add g4lb/brb-skill` (skills only; Auto-BRB requires the plugin install).
 
 ## [1.0.0-rc.1] — 2026-10-11
@@ -30,7 +32,7 @@ First release candidate.
 
 ### Known limitations
 
-- Claude Code's built-in `/continue` takes that name, so resume is `/brb:continue`.
+- As a plugin, resume is `/brb:continue` (`/brb continue` works everywhere).
 - Windows hook execution not yet verified end to end in Claude Code.
 
 Verified against Claude Code 2.1.289.

@@ -58,7 +58,7 @@ test('S19/S20: pre-compact and session-end save automatic checkpoints from the t
   assert.equal(hook(repo, home, 'session-end', { session_id: 'sess-2', transcript_path: tp, reason: 'other' }).code, 0);
   assert.equal(checkpointFiles(home).length, 2);
   const r = brb(repo, home, ['resume']);
-  assert.match(r.stdout, /automatic checkpoint\. Task details were extracted/);
+  assert.match(r.stdout, /! Context {6}automatic checkpoint: extracted from the transcript/);
   assert.match(r.stdout, /NEEDS INPUT/);
 });
 
@@ -314,4 +314,24 @@ test('review: a new, shorter task list still produces milestone checkpoints', ()
   const stateFile = path.join(path.dirname(path.dirname(checkpointFiles(home)[0] ?? '')), 'state.json');
   const state = readJson(stateFile) as { milestones: Record<string, { completed: number; at: string }> };
   assert.equal(state.milestones['sess-1']?.completed, 0, 'count follows the new list');
+});
+
+test('post-bash hook shows a one-line status only for BRB save/resume output', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  const s = save(repo, home);
+  const run = (command: string, stdout: string) => brb(repo, home, ['hook', 'post-bash'], JSON.stringify({ tool_name: 'Bash', tool_input: { command }, tool_response: { stdout } }));
+  const saved = run('node "/p/skills/brb/scripts/brb.mjs" save --session x', s.stdout);
+  assert.equal(saved.code, 0);
+  const msg = (JSON.parse(saved.stdout) as { systemMessage: string }).systemMessage;
+  assert.match(msg, /^BRB — Checkpoint saved: ✓ Repository .* · ✓ Task 2 done, 1 in progress, 1 left · ✓ Privacy clean · ✓ Stored checkpoint [0-9a-f]{8}$/);
+  assert.ok(!msg.includes('\n'), 'one line');
+
+  const resumed = run('node "/p/skills/continue/scripts/brb.mjs" resume', brb(repo, home, ['resume', '--no-mark']).stdout);
+  assert.match((JSON.parse(resumed.stdout) as { systemMessage: string }).systemMessage, /^BRB — Checkpoint found: ✓ Integrity verified · ✓ Repository PASSED · ✓ Resume READY$/);
+
+  // Other commands, other output, and garbage produce nothing.
+  assert.equal(run('npm test', s.stdout).stdout, '');
+  assert.equal(run('node "/p/skills/brb/scripts/brb.mjs" save', 'something else').stdout, '');
+  assert.equal(brb(repo, home, ['hook', 'post-bash'], 'not json').code, 0);
 });

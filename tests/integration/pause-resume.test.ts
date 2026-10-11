@@ -10,11 +10,13 @@ test('S1/S2: pause and resume (the CLI is stateless, so a new process equals a n
   const s = save(repo, home);
   assert.equal(s.code, 0, s.stderr);
   assert.match(s.stdout, /Checkpoint saved/);
-  assert.match(s.stdout, /Next: Finish token refresh handling/);
+  assert.match(s.stdout, /Next → Finish token refresh handling/);
+  assert.match(s.stdout, /✓ Task {9}objective · next step · 2 done, 1 in progress, 1 left/);
+  assert.match(s.stdout, /✓ Stored {7}checkpoint [0-9a-f]{8} · \d+ ms/);
   const r = brb(repo, home, ['resume']);
   assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /Repository check: PASSED/);
-  assert.match(r.stdout, /Resume status: READY/);
+  assert.match(r.stdout, /✓ Repository {3}PASSED/);
+  assert.match(r.stdout, /✓ Resume {7}READY/);
   assert.match(r.stdout, /Implement authentication/);
   assert.match(r.stdout, /<brb-checkpoint-data id="[0-9a-f-]{36}">[\s\S]*<\/brb-checkpoint-data>\s*$/);
   assert.match(r.stdout, /npm test` — \*\*failed\*\*: 1 failing: refresh expiry/);
@@ -49,7 +51,7 @@ test('S6: works without git and reports limited verification', () => {
   const home = tmpDir();
   const s = save(dir, home, { ...TASK, files: ['notes.md'] });
   assert.equal(s.code, 0, s.stderr);
-  assert.match(s.stdout, /Git: unavailable/);
+  assert.match(s.stdout, /– Repository {3}git unavailable/);
   fs.appendFileSync(path.join(dir, 'notes.md'), ' edited');
   const r = brb(dir, home, ['resume']);
   assert.equal(r.code, 0);
