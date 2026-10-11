@@ -20,15 +20,30 @@ export function brbHome(env = process.env) {
 }
 /** Normalize a project root so the same directory always maps to the same identity. */
 export function normalizeRoot(root) {
-    let real = root;
-    try {
-        real = fs.realpathSync.native(root);
-    }
-    catch {
-        real = path.resolve(root);
-    }
-    real = real.replace(/[\\/]+$/, '') || real;
+    const resolved = realpathOfExistingPrefix(path.resolve(root));
+    const real = resolved.replace(/[\\/]+$/, '') || resolved;
     return process.platform === 'win32' ? real.toLowerCase() : real;
+}
+/**
+ * realpath() of the longest existing prefix, with the missing remainder
+ * re-attached. A path that does not exist yet (e.g. a new BRB_HOME) then
+ * normalizes the same way as existing paths, including Windows 8.3 names.
+ */
+function realpathOfExistingPrefix(p) {
+    const missing = [];
+    let cur = p;
+    for (;;) {
+        try {
+            return path.join(fs.realpathSync.native(cur), ...missing.reverse());
+        }
+        catch {
+            const parent = path.dirname(cur);
+            if (parent === cur)
+                return p;
+            missing.push(path.basename(cur));
+            cur = parent;
+        }
+    }
 }
 export function projectIdentity(root, home = brbHome()) {
     const normalized = normalizeRoot(root);
