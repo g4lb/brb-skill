@@ -18,7 +18,11 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
+      # Check out the tag itself, so the archive is built from the tagged commit
+      # whichever ref the workflow was started from.
       - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v${{ inputs.version }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -28,11 +32,12 @@ jobs:
       - run: npm run check
       - name: Version matches input
         run: test "$(node -p "require('./package.json').version")" = "${{ inputs.version }}"
-      - name: Tag exists for this version
+      - name: Checked-out commit is the tagged commit
         run: |
-          git fetch --tags --quiet
-          git rev-parse --verify --quiet "refs/tags/v${{ inputs.version }}" > /dev/null \
-            || { echo "Tag v${{ inputs.version }} not found; push it first"; exit 1; }
+          # --force: checkout stores an annotated tag as a plain ref, and a fetch without it fails with "would clobber existing tag".
+          git fetch --force --quiet origin "+refs/tags/v${{ inputs.version }}:refs/tags/v${{ inputs.version }}"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "v${{ inputs.version }}^{commit}")" \
+            || { echo "HEAD is not the commit tagged v${{ inputs.version }}"; exit 1; }
       - name: Build release archive
         run: |
           npm pack

@@ -27,10 +27,10 @@ The version appears in four places, and `npm run verify:dist` fails if they disa
 10. [ ] Commit, then create an annotated tag: `git tag -a v<version> -m "BRB v<version>"`. The Release workflow expects the `v<version>` form.
 11. [ ] Push the commit and the tag (`git push origin main && git push origin v<version>`), then run the **Release** workflow:
     ```bash
-    gh workflow run release.yml -f version=<version> --ref v<version>
+    gh workflow run release.yml -f version=<version>
     gh run watch "$(gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
     ```
-    It re-runs `npm run check` on the tag and uploads `brb-<version>.tgz` as an artifact. It does **not** create the release.
+    It checks out the tag `v<version>`, re-runs `npm run check` on it, and uploads `brb-<version>.tgz` as an artifact. It does **not** create the release.
 12. [ ] Create the release from your own account, so you are its author (not `github-actions[bot]`):
     ```bash
     gh run download "$(gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')" -n brb-<version>
