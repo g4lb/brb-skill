@@ -21,6 +21,8 @@ All notable changes to this project are documented here. This project follows [S
 
 - Checkpoint schema version 2 (adds `environment.backgroundWork`). Version 1 checkpoints are migrated on load. BRB 1.0.0 refuses version 2 checkpoints with an upgrade message.
 
+Verified against Claude Code 2.1.289.
+
 ## [1.0.0] — 2026-10-11
 
 First stable release. Install with `/plugin marketplace add g4lb/brb-skill` then `/plugin install brb@brb`, or skills only with `npx skills add g4lb/brb-skill`.
