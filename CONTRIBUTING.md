@@ -15,8 +15,9 @@ Requirements: Node.js 20+ and git. The E2E suite (`npm run test:e2e`) also needs
 
 ## Ground rules
 
-- **No runtime dependencies.** The helper ships as plain JavaScript in `plugin/dist/`. Dev dependencies are fine, but they stay at the repository root: `plugin/` must never contain a `package.json`, or Claude Code would run `npm install` for every user.
-- **Commit `plugin/dist/`.** Plugins install from git with no build step. Run `npm run build` and commit the result. CI fails if `plugin/dist/` is stale.
+- **No runtime dependencies.** The helper ships as one bundled JavaScript file, `scripts/brb.mjs`, inside each skill folder. Dev dependencies are fine, but they stay at the repository root: `plugin/` must never contain a `package.json`, or Claude Code would run `npm install` for every user.
+- **Commit the bundles.** Plugins and skills install from git with no build step. Run `npm run build` and commit `plugin/skills/*/scripts/brb.mjs`. CI fails if a bundle is stale.
+- **Skills stay self-contained.** Reference files with `${CLAUDE_SKILL_DIR}`, never `${CLAUDE_PLUGIN_ROOT}`: the skills CLI copies skill folders on their own.
 - **Read-only git only.** Never add a git command that changes the repository, index, stash or refs. CI checks this.
 - **No network access.** CI checks this too.
 - **Never block Claude Code.** Hooks must exit 0 or 1. Never 2.

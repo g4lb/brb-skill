@@ -4,6 +4,15 @@ All notable changes to this project are documented here. This project follows [S
 
 ## [Unreleased]
 
+### Changed
+
+- The installable plugin lives in `plugin/` with no `package.json`, so installing never runs `npm install` (it previously pulled ~47 MB of development dependencies).
+- The helper is bundled into `scripts/brb.mjs` inside each skill folder, and skills reference it with `${CLAUDE_SKILL_DIR}`.
+
+### Added
+
+- Install with the skills CLI: `npx skills add g4lb/brb-skill` (skills only; Auto-BRB requires the plugin install).
+
 ## [1.0.0-rc.1] — 2026-10-11
 
 First release candidate.

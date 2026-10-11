@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['plugin/dist/**', 'build/**', 'node_modules/**'] },
+  { ignores: ['plugin/skills/*/scripts/**', 'build/**', 'node_modules/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

@@ -8,7 +8,8 @@ These notes record what Claude Code supports, as verified while building BRB 1.0
 | --- | --- | --- |
 | Plugin skills as slash commands | `skills/<name>/SKILL.md` in plugin `brb` becomes `/brb:<name>`. The bare `/<name>` also works unless another command already uses the name. | `/brb status` and `/brb:continue` ran through `claude -p --plugin-dir`. |
 | `/continue` | **Taken by a Claude Code built-in.** Without the plugin, `claude -p "/continue"` reports "/continue isn't available in this environment", the same as `/resume`. So BRB's resume skill is `/brb:continue`. | Experiment |
-| Skill substitutions | `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_SESSION_ID}` and `$ARGUMENTS` are substituted in plugin skill content. | The session id was recorded in a saved checkpoint. |
+| Skill substitutions | `${CLAUDE_SKILL_DIR}`, `${CLAUDE_SESSION_ID}` and `$ARGUMENTS` are substituted in skill content, both for plugin skills and for standalone skills in `.claude/skills/`. | E2E in both install modes; the session id was recorded in a saved checkpoint. |
+| Skills CLI (`npx skills add`) | Discovers skills through `.claude-plugin/marketplace.json`, copies each skill folder (including `scripts/`) into `.claude/skills/<name>/`, and does not install hooks. It reports anonymous install telemetry for public repositories, which is how skills.sh lists them. Opt out with `DISABLE_TELEMETRY=1`. | Isolated install test with telemetry off |
 | Natural-language activation | "I need to leave, be right back" made Claude invoke the `brb` skill. | E2E session 1 |
 | `SessionStart` `additionalContext` | Injected into Claude's context. | E2E: Claude quoted the hint. |
 | `PreCompact` hook | Fires for `/compact`. The input has `session_id`, `transcript_path`, `cwd`, `trigger`. | E2E: an automatic `pre-compact` checkpoint was created. |

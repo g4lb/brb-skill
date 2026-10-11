@@ -93,7 +93,15 @@ claude --plugin-dir ./brb-skill/plugin
 
 ### Manual install (no plugin system)
 
-Clone the repository and load the `plugin/` folder with `--plugin-dir` as shown above. The committed `plugin/dist/` folder is the built helper, so no build step or `npm install` is needed. Installing BRB downloads no npm packages.
+Clone the repository and load the `plugin/` folder with `--plugin-dir` as shown above. Each skill folder carries its built helper (`scripts/brb.mjs`), so no build step or `npm install` is needed. Installing BRB downloads no npm packages.
+
+### With the skills CLI ([skills.sh](https://www.skills.sh/))
+
+```bash
+npx skills add g4lb/brb-skill
+```
+
+This installs the two skills on their own, without the plugin system. You get `/brb` (pause) and `/brb continue` (resume) with the same checkpoints and repository checks. **Not included:** Auto-BRB and the resume hint, because those need plugin hooks. For the full feature set, use the plugin install above. In this mode the resume skill is named `continue`, which Claude Code's built-in `/continue` shadows, so resume with `/brb continue` or by saying "I'm back".
 
 ## Getting started
 
@@ -109,7 +117,7 @@ That's it. Everything else is optional.
 | --- | --- |
 | `/brb` | Pause: save a checkpoint of the current task. |
 | `/brb:continue [id]` | Resume: load the right checkpoint, verify the repository, continue the task. |
-| `/brb continue` | Same as `/brb:continue`. |
+| `/brb continue` | Same as `/brb:continue`, and the way to resume when BRB is installed with the skills CLI. |
 | `/brb status` | What `/brb:continue` would load, how many checkpoints exist, Auto-BRB state. |
 | `/brb list` | All checkpoints for this project. |
 | `/brb show [id]` | Print a checkpoint's handoff. |
@@ -232,7 +240,8 @@ Node.js 20 and 22 are tested.
 ## Limitations
 
 - **Not a memory restore.** BRB preserves explicit task context and repository metadata. It doesn't restore Claude's conversation, hidden reasoning or the memory of running processes. A resumed session may still need to read files or ask you something.
-- **`/continue` is taken.** Use `/brb:continue` or natural language (see [Commands](#commands)).
+- **`/continue` is taken.** Use `/brb:continue`, `/brb continue` or natural language (see [Commands](#commands)).
+- **Skills-CLI installs have no hooks.** `npx skills add` copies only the skills, so Auto-BRB and the resume hint are unavailable there.
 - **Automatic checkpoints are extractive.** They rely on the transcript file. Its format is internal to Claude Code and may change. If parsing fails, BRB still saves repository state and marks the task context as unavailable.
 - **Running processes are not inspected.** BRB records the processes Claude reports (for example, a dev server it started). It doesn't read the OS process table or restart anything.
 - **SessionEnd has a short time budget** in Claude Code. BRB requests 10 seconds. On extremely slow filesystems or huge repositories, a session-end checkpoint can be cut short. Use `/brb` before you close the session.
@@ -256,7 +265,7 @@ Node.js 20 and 22 are tested.
 | Auto-BRB doesn't save | Run `/brb auto status`. Invalid config disables it. Look at `~/.brb/logs/hook-errors.log`. Set `BRB_DEBUG=1` to log every hook payload's metadata to `~/.brb/logs/hooks-debug.log`. |
 | Claude asks before continuing | That is intended when the branch changed, history was rewritten, the checkpoint is automatic or partial, or its text looks like instructions. |
 
-You can also run the helper directly: `node <plugin>/dist/cli.js help`.
+You can also run the helper directly: `node <skill folder>/scripts/brb.mjs help`.
 
 ## Upgrade, removal and data
 

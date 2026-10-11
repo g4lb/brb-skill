@@ -9,7 +9,7 @@ The version appears in four places, and `npm run verify:dist` fails if they disa
 
 1. [ ] `main` is green in CI on Linux, macOS and Windows.
 2. [ ] Bump the version in all four places (for example `1.0.0-rc.1` → `1.0.0`).
-3. [ ] `npm run build` and commit `plugin/dist/`. Plugins install from git with no build step.
+3. [ ] `npm run build` and commit `plugin/skills/*/scripts/brb.mjs`. Plugins and skills install from git with no build step.
 4. [ ] Update `CHANGELOG.md`.
 5. [ ] `npm run check`: typecheck, lint, unit and integration tests, dist verification.
 6. [ ] `npm run validate:plugin` (validates the marketplace and the plugin)

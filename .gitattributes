@@ -1,2 +1,2 @@
 * text=auto eol=lf
-plugin/dist/** linguist-generated=true
+plugin/skills/*/scripts/brb.mjs linguist-generated=true

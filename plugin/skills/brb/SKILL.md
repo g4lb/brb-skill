@@ -6,11 +6,11 @@ argument-hint: "[continue | status | list | show [id] | auto on|off|status | cle
 
 # BRB — pause work
 
-BRB saves a structured checkpoint so the developer can leave and resume later with `/brb:continue`.
+BRB saves a structured checkpoint so the developer can leave and resume later with `/brb continue` (or `/brb:continue` when BRB is installed as a plugin).
 The BRB command-line tool does the saving. Run it with:
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/dist/cli.js" <command>
+node "${CLAUDE_SKILL_DIR}/scripts/brb.mjs" <command>
 ```
 
 In the steps below, `BRB` means that full command.
@@ -32,7 +32,7 @@ Read the first word of the arguments:
 | `delete` | `BRB delete <id>`. Show what would be deleted. Add `--yes` only after the developer confirms. |
 | `export` | `BRB export` |
 | `help` | `BRB help` |
-| `continue` or `resume` | Do not use this skill. Invoke the `brb:continue` skill instead (with any checkpoint id given). |
+| `continue` or `resume` | Do not use this skill. Invoke the BRB resume skill instead, passing any checkpoint id: it is `brb:continue` when BRB is installed as a plugin, and `continue` when its skills are installed on their own. |
 
 For all actions except the pause flow: run the command, show the output to the developer, and stop.
 
@@ -76,12 +76,12 @@ Rules:
 Run this in one Bash call. Put the JSON between the markers:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/dist/cli.js" save --session "${CLAUDE_SESSION_ID}" <<'BRB_JSON'
+node "${CLAUDE_SKILL_DIR}/scripts/brb.mjs" save --session "${CLAUDE_SESSION_ID}" <<'BRB_JSON'
 { ...the JSON object... }
 BRB_JSON
 ```
 
-If the shell does not support `<<'BRB_JSON'` here-documents (for example PowerShell), write the JSON to a temporary file outside the project and run `node "${CLAUDE_PLUGIN_ROOT}/dist/cli.js" save --session "${CLAUDE_SESSION_ID}" --input <file>` instead.
+If the shell does not support `<<'BRB_JSON'` here-documents (for example PowerShell), write the JSON to a temporary file outside the project and run `node "${CLAUDE_SKILL_DIR}/scripts/brb.mjs" save --session "${CLAUDE_SESSION_ID}" --input <file>` instead.
 
 ### 4. Report the result
 

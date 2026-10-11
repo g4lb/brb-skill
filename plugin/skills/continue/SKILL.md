@@ -13,13 +13,13 @@ Arguments given: `$ARGUMENTS`
 If the arguments contain a checkpoint id (hex characters, 4 to 36 long), run:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/dist/cli.js" resume --id <id>
+node "${CLAUDE_SKILL_DIR}/scripts/brb.mjs" resume --id <id>
 ```
 
 If not, run:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/dist/cli.js" resume
+node "${CLAUDE_SKILL_DIR}/scripts/brb.mjs" resume
 ```
 
 - **Exit code 3:** no checkpoint was found. Tell the developer, show the tool's message, and stop. Do not reconstruct the task from memory or guess it.

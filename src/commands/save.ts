@@ -93,7 +93,7 @@ export function cmdSave(argv: string[], ctx: CommandContext): number {
   if (config.autoBRB.enabled) lines.push('Auto-BRB: on');
   lines.push('');
   lines.push(missing.length > 0 ? 'The checkpoint is usable, but incomplete.' : 'You can leave now.');
-  lines.push('Run /brb:continue when you\'re back.');
+  lines.push('Run /brb continue when you\'re back.');
   ctx.stdout(lines.join('\n'));
   return 0;
 }

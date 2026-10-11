@@ -35,7 +35,7 @@ jobs:
         run: npm run lint
       - name: Unit and integration tests
         run: npm test
-      - name: Committed plugin/dist/ matches source; versions, plugin references and layout agree
+      - name: Committed skill bundles match source; versions, references and layout agree
         run: npm run verify:dist
 
   package:

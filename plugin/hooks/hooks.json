@@ -4,14 +4,14 @@
     "PreCompact": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/cli.js\" hook pre-compact", "timeout": 30 }
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook pre-compact", "timeout": 30 }
         ]
       }
     ],
     "SessionEnd": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/cli.js\" hook session-end", "timeout": 10 }
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook session-end", "timeout": 10 }
         ]
       }
     ],
@@ -19,7 +19,7 @@
       {
         "matcher": "startup|clear|compact",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/cli.js\" hook session-start", "timeout": 10 }
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook session-start", "timeout": 10 }
         ]
       }
     ],
@@ -27,7 +27,7 @@
       {
         "matcher": "TodoWrite|TaskUpdate",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/cli.js\" hook post-tool-use", "timeout": 10 }
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook post-tool-use", "timeout": 10 }
         ]
       }
     ]
