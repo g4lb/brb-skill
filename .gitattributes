@@ -1,2 +1,2 @@
 * text=auto eol=lf
-dist/** linguist-generated=true
+plugin/dist/** linguist-generated=true

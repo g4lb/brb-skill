@@ -7,7 +7,7 @@ Use this to record the README GIF or video. Everything shown is real output.
 ```bash
 mkdir demo-app && cd demo-app && git init -q
 npm init -y >/dev/null && git add . && git commit -qm init
-claude plugin install brb@brb   # or: claude --plugin-dir /path/to/brb
+claude plugin install brb@brb   # or: claude --plugin-dir /path/to/brb-skill/plugin
 ```
 
 Use a terminal at least 100 columns wide, with a large font and a dark theme.

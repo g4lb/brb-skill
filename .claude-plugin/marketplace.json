@@ -5,12 +5,12 @@
     "email": "galevgi@gmail.com"
   },
   "metadata": {
-    "description": "BRB — You leave. Your context stays."
+    "description": "BRB \u2014 You leave. Your context stays."
   },
   "plugins": [
     {
       "name": "brb",
-      "source": "./",
+      "source": "./plugin",
       "description": "Pause with /brb, resume with /continue. Local, structured session checkpoints.",
       "version": "1.0.0-rc.1",
       "author": {

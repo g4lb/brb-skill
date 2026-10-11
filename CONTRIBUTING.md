@@ -8,15 +8,15 @@ Thanks for helping. BRB is deliberately small. Before adding a feature, ask whet
 git clone https://github.com/g4lb/brb-skill.git && cd brb-skill
 npm ci
 npm run check        # typecheck, lint, unit and integration tests, dist verification
-claude --plugin-dir . # try your changes in Claude Code
+claude --plugin-dir ./plugin # try your changes in Claude Code
 ```
 
 Requirements: Node.js 20+ and git. The E2E suite (`npm run test:e2e`) also needs an authenticated `claude` CLI, and it spends model tokens.
 
 ## Ground rules
 
-- **No runtime dependencies.** The helper ships as plain JavaScript in `dist/`. Dev dependencies are fine.
-- **Commit `dist/`.** Plugins install from git with no build step. Run `npm run build` and commit the result. CI fails if `dist/` is stale.
+- **No runtime dependencies.** The helper ships as plain JavaScript in `plugin/dist/`. Dev dependencies are fine, but they stay at the repository root: `plugin/` must never contain a `package.json`, or Claude Code would run `npm install` for every user.
+- **Commit `plugin/dist/`.** Plugins install from git with no build step. Run `npm run build` and commit the result. CI fails if `plugin/dist/` is stale.
 - **Read-only git only.** Never add a git command that changes the repository, index, stash or refs. CI checks this.
 - **No network access.** CI checks this too.
 - **Never block Claude Code.** Hooks must exit 0 or 1. Never 2.

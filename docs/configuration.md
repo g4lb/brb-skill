@@ -65,7 +65,7 @@ Validation is strict. Unknown keys, wrong types and out-of-range values are erro
 
 ## Hook registration
 
-The plugin always registers its hooks (`hooks/hooks.json`). The hooks read the config and exit at once when their feature is off. To remove even that overhead, disable the plugin with `claude plugin disable brb@brb`.
+The plugin always registers its hooks (`plugin/hooks/hooks.json`). The hooks read the config and exit at once when their feature is off. To remove even that overhead, disable the plugin with `claude plugin disable brb@brb`.
 
 | Hook | Matcher | Timeout | Command |
 | --- | --- | --- | --- |

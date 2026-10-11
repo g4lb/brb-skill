@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-export const CLI = path.resolve('dist', 'cli.js');
+export const CLI = path.resolve('plugin', 'dist', 'cli.js');
 
 export function tmpDir(prefix = 'brb-test-'): string {
   return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));

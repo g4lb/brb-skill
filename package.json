@@ -15,22 +15,20 @@
   "type": "module",
   "private": true,
   "bin": {
-    "brb": "dist/cli.js"
+    "brb": "plugin/dist/cli.js"
   },
   "engines": {
     "node": ">=20"
   },
   "files": [
-    "dist",
-    "skills",
-    "hooks",
-    ".claude-plugin",
+    "plugin",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    ".claude-plugin/marketplace.json"
   ],
   "scripts": {
-    "build": "node scripts/clean.mjs dist && tsc -p tsconfig.json",
+    "build": "node scripts/clean.mjs plugin/dist && tsc -p tsconfig.json",
     "build:test": "node scripts/clean.mjs build && tsc -p tsconfig.test.json",
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "lint": "eslint .",
@@ -38,7 +36,7 @@
     "test:unit": "npm run build:test && node scripts/run-tests.mjs build/tests/unit",
     "test:e2e": "npm run build && bash tests/e2e/claude-e2e.sh",
     "verify:dist": "node scripts/verify-dist.mjs",
-    "validate:plugin": "claude plugin validate . --strict",
+    "validate:plugin": "claude plugin validate . --strict && claude plugin validate plugin --strict",
     "check": "npm run typecheck && npm run lint && npm test && npm run verify:dist"
   },
   "devDependencies": {

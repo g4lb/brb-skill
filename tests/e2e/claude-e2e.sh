@@ -5,7 +5,7 @@
 # Uses a throwaway repository and BRB_HOME; nothing outside them is touched.
 set -euo pipefail
 
-PLUGIN_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+PLUGIN_DIR="$(cd "$(dirname "$0")/../../plugin" && pwd)"
 MODEL="${BRB_E2E_MODEL:-sonnet}"
 WORK="$(mktemp -d)"
 export BRB_HOME="$WORK/brb-home"

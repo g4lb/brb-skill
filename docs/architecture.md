@@ -2,9 +2,11 @@
 
 BRB is a Claude Code plugin made of three parts:
 
-1. **Skills** (`skills/brb/SKILL.md`, `skills/continue/SKILL.md`). These are instructions for Claude. They cover what to collect when pausing, how to call the helper, and how to treat a loaded checkpoint.
-2. **A helper CLI** (`dist/cli.js`, built from `src/`). A dependency-free Node.js program that does everything that must be deterministic: git inspection, hashing, redaction, validation, atomic persistence, selection, verification and retention.
-3. **Hooks** (`hooks/hooks.json`). Lifecycle hooks call the same CLI for Auto-BRB and the resume hint.
+Everything Claude Code installs lives in `plugin/`. That folder has no `package.json`, so installing BRB never runs `npm install`. Development tooling (TypeScript sources, tests, lint) stays at the repository root, and the marketplace entry points at `./plugin`.
+
+1. **Skills** (`plugin/skills/brb/SKILL.md`, `plugin/skills/continue/SKILL.md`). These are instructions for Claude. They cover what to collect when pausing, how to call the helper, and how to treat a loaded checkpoint.
+2. **A helper CLI** (`plugin/dist/cli.js`, built from `src/`). A dependency-free Node.js program that does everything that must be deterministic: git inspection, hashing, redaction, validation, atomic persistence, selection, verification and retention.
+3. **Hooks** (`plugin/hooks/hooks.json`). Lifecycle hooks call the same CLI for Auto-BRB and the resume hint.
 
 The split is deliberate. Only Claude knows the task: the goal, what's done, the next step. Only deterministic code should decide what is on disk, whether the data is valid, and whether the repository changed. Claude never writes checkpoint files directly. It hands a JSON task summary to `brb save`, and the CLI builds, redacts, validates and seals the checkpoint.
 

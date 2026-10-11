@@ -15,7 +15,8 @@ These notes record what Claude Code supports, as verified while building BRB 1.0
 | `SessionEnd` hook | Fires in `-p` mode with `reason: "other"`. The docs list `prompt_input_exit` for non-interactive exits, but in practice `other` was reported. | `BRB_DEBUG=1` hook log |
 | Uninstall data deletion | `claude plugin uninstall` removes the plugin data directory (`~/.claude/plugins/data/<id>/`) unless `--keep-data` is passed. | `claude plugin uninstall --help` |
 | Marketplace install | `claude plugin marketplace add <path or owner/repo>` then `claude plugin install brb@brb` installs and enables the plugin. | Isolated `CLAUDE_CONFIG_DIR` experiment |
-| `claude plugin validate --strict` | Passes for this repository. | Local run |
+| `claude plugin validate --strict` | Passes for the marketplace (repository root) and the plugin (`plugin/`). | Local run |
+| Dependency install | Claude Code runs `npm install` (including dev dependencies) in an installed plugin that has a `package.json`. BRB's plugin folder therefore has none. | Fresh install from GitHub produced a 47 MB `node_modules` before the layout change |
 | Transcript format | JSONL with `type: user/assistant`, `message.content`, `isMeta`, `isSidechain`, `isCompactSummary`, `timestamp`; task tools `TodoWrite` (`input.todos`) and `TaskCreate`/`TaskUpdate` (results contain `Task #N created`). **The docs state that this format is internal and may change.** | Local transcripts |
 
 ## From documentation (not independently exercised)

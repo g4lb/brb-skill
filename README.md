@@ -88,12 +88,12 @@ claude plugin install brb@brb --scope project
 
 ```bash
 git clone https://github.com/g4lb/brb-skill.git
-claude --plugin-dir ./brb-skill
+claude --plugin-dir ./brb-skill/plugin
 ```
 
 ### Manual install (no plugin system)
 
-Clone the repository and load it with `--plugin-dir` as shown above. The committed `dist/` folder is the built helper, so no build step is needed.
+Clone the repository and load the `plugin/` folder with `--plugin-dir` as shown above. The committed `plugin/dist/` folder is the built helper, so no build step or `npm install` is needed. Installing BRB downloads no npm packages.
 
 ## Getting started
 
