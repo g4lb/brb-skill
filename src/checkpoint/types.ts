@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1 as const;
+export const SCHEMA_VERSION = 2 as const;
 
 export type CheckpointType = 'manual' | 'auto';
 export type CheckpointTrigger = 'manual' | 'pre-compact' | 'session-end' | 'milestone';
@@ -108,6 +108,8 @@ export interface Checkpoint {
     relevantTools: string[];
     /** Processes Claude reported as relevant (BRB does not inspect the OS process table). */
     runningProcesses: string[];
+    /** Background work (subagents, background commands) that was still running at save time and may change files after it. */
+    backgroundWork: string[];
   };
   /** Raw context extracted from the transcript by automatic checkpoints. */
   context: {
@@ -136,6 +138,7 @@ export interface SaveInput {
   tests?: TestRecord[];
   files?: (RelevantFile | string)[];
   runningProcesses?: string[];
+  backgroundWork?: string[];
   relevantTools?: string[];
   notes?: string;
   resumeInstructions?: string;

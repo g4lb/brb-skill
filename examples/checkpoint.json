@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "checkpointId": "ac194f4f-e91f-4aa7-863c-fdf43f32fff9",
   "createdAt": "2026-10-11T07:57:07.545Z",
   "type": "manual",
@@ -103,7 +103,8 @@
     "relevantTools": [],
     "runningProcesses": [
       "Dev server: npm run dev on port 5173 (started by Claude)"
-    ]
+    ],
+    "backgroundWork": []
   },
   "context": null,
   "notes": "API base URL comes from VITE_API_URL; do not hard-code it.",
@@ -114,6 +115,6 @@
   "redactions": 0,
   "integrity": {
     "algorithm": "sha256",
-    "digest": "0425f3c27863d5ad1441cc8eba9cce9051b16de958dbe46b525374c88fec2cba"
+    "digest": "8ced21dd3b1cbbd90ab12c2b079520f0d029cefb444577032032f9f4e5c2d5ea"
   }
 }

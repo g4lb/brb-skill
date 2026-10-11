@@ -105,3 +105,26 @@ test('the documented example checkpoint is valid', async () => {
   const r = parseCheckpoint(readFileSync('examples/checkpoint.json', 'utf8'));
   assert.ok(r.ok, r.ok ? '' : r.message);
 });
+
+test('a version 1 checkpoint loads and is migrated to record no background work', () => {
+  const v2 = sample();
+  const { integrity: _i, ...body } = v2;
+  void _i;
+  const { backgroundWork: _b, ...environment } = body.environment;
+  void _b;
+  const v1 = { ...body, schemaVersion: 1, environment } as unknown as Checkpoint;
+  const sealed = { ...v1, integrity: { algorithm: 'sha256', digest: computeDigest(v1) } };
+  const r = parseCheckpoint(JSON.stringify(sealed));
+  assert.ok(r.ok, r.ok ? '' : r.message);
+  assert.equal(r.ok && r.migratedFrom, 1);
+  assert.equal(r.ok && r.checkpoint.schemaVersion, 2);
+  assert.deepEqual(r.ok && r.checkpoint.environment.backgroundWork, []);
+  // The original digest still protects a version 1 file.
+  assert.equal(parseCheckpoint(JSON.stringify({ ...sealed, notes: 'edited' })).ok, false);
+});
+
+test('backgroundWork is accepted on save and stored in the environment', () => {
+  const v = validateSaveInput({ objective: 'x', backgroundWork: ['subagent: review fixes on branch feat/x'] });
+  assert.ok(v.ok);
+  assert.equal(validateSaveInput({ backgroundWork: 'not a list' }).ok, false);
+});

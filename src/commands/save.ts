@@ -80,6 +80,11 @@ export function cmdSave(argv: string[], ctx: CommandContext): number {
   } else {
     lines.push(step('–', 'Repository', `git unavailable (${git.reason}); relevant files fingerprinted only`));
   }
+  const background = checkpoint.environment.backgroundWork;
+  if (background.length > 0) {
+    lines.push(step('!', 'Background', `${plural(background.length, 'task')} still running; files may change after this checkpoint`));
+    for (const b of background.slice(0, 5)) lines.push(sub(`- ${firstLine(b)}`));
+  }
   const taskParts = [
     t.objective ? 'objective' : 'objective missing',
     t.nextAction ? 'next step' : 'next step missing',
@@ -102,6 +107,7 @@ export function cmdSave(argv: string[], ctx: CommandContext): number {
   if (missing.length > 0) lines.push(`Missing: ${missing.join(', ')}. Run /brb again with these details for a complete checkpoint.`);
   lines.push('');
   lines.push(missing.length > 0 ? 'The checkpoint is usable, but incomplete.' : 'You can leave now.');
+  if (background.length > 0) lines.push('Background work keeps running while you are away. It stops if you close this session.');
   lines.push('Run /brb continue when you\'re back.');
   ctx.stdout(lines.join('\n'));
   return 0;

@@ -196,7 +196,7 @@ test('S16/S17: checkpoints from a newer schema version are skipped with an upgra
   assert.equal(save(repo, home).code, 0);
   const file = checkpointFiles(home)[0] ?? '';
   const doc = readJson(file);
-  doc.schemaVersion = 2;
+  doc.schemaVersion = 3;
   fs.writeFileSync(file, JSON.stringify(doc));
   const r = brb(repo, home, ['resume']);
   assert.equal(r.code, 3);
@@ -299,4 +299,68 @@ test('review: BRB_HOME inside the repository is refused', () => {
   assert.equal(r.code, 1);
   assert.match(r.stderr, /inside this project/);
   assert.ok(!fs.existsSync(path.join(repo, '.brb')));
+});
+
+const BACKGROUND_TASK = { ...TASK, backgroundWork: ['subagent: review fixes on branch main, edits app.js, writes report to fix-report.md'] };
+
+test('background work: save warns that files may change after the checkpoint', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  const s = save(repo, home, BACKGROUND_TASK, ['--session', 'sess-a']);
+  assert.equal(s.code, 0, s.stderr);
+  assert.match(s.stdout, /! Background {3}1 task still running; files may change after this checkpoint/);
+  assert.match(s.stdout, /- subagent: review fixes on branch main/);
+  assert.match(s.stdout, /Background work keeps running while you are away/);
+  const plain = save(repo, home);
+  assert.doesNotMatch(plain.stdout, /Background/);
+});
+
+test('background work: resume in the same session explains the changes and stays ready', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  assert.equal(save(repo, home, BACKGROUND_TASK, ['--session', 'sess-a']).code, 0);
+  // The background work keeps editing after the checkpoint.
+  fs.appendFileSync(path.join(repo, 'app.js'), 'fix();\n');
+  fs.writeFileSync(path.join(repo, 'proxy-ip.js'), 'x');
+  const r = brb(repo, home, ['resume', '--session', 'sess-a']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /! Repository {3}CHANGES DETECTED — background work was running at checkpoint time; these changes may be its output/);
+  assert.match(r.stdout, /! Background {3}1 task was running at checkpoint time · same session — it may still be running/);
+  assert.match(r.stdout, /✓ Resume {7}READY/);
+  // The description is checkpoint text: it appears only inside the data block.
+  const [status, data] = r.stdout.split('<brb-checkpoint-data');
+  assert.doesNotMatch(status ?? '', /review fixes on branch/);
+  assert.match(data ?? '', /## Background work at checkpoint time[\s\S]*subagent: review fixes on branch main/);
+});
+
+test('background work: resume in a new session says it stopped and needs input', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  assert.equal(save(repo, home, BACKGROUND_TASK, ['--session', 'sess-a']).code, 0);
+  const r = brb(repo, home, ['resume', '--session', 'sess-b']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /new session — it stopped when the earlier session ended/);
+  assert.match(r.stdout, /! Resume {7}NEEDS INPUT/);
+  const j = JSON.parse(brb(repo, home, ['resume', '--session', 'sess-b', '--json']).stdout) as { status: string; background: { session: string; work: string[] } };
+  assert.equal(j.status, 'needs-input');
+  assert.equal(j.background.session, 'new');
+  assert.equal(j.background.work.length, 1);
+});
+
+test('background work: resume without a session id cannot tell and says so', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  assert.equal(save(repo, home, BACKGROUND_TASK, ['--session', 'sess-a']).code, 0);
+  const r = brb(repo, home, ['resume']);
+  assert.match(r.stdout, /it may still be running \(same session\) or may have stopped \(new session\)/);
+  assert.match(r.stdout, /✓ Resume {7}READY/);
+});
+
+test('without background work, a different session changes nothing', () => {
+  const repo = makeRepo();
+  const home = tmpDir();
+  assert.equal(save(repo, home, TASK, ['--session', 'sess-a']).code, 0);
+  const r = brb(repo, home, ['resume', '--session', 'sess-b']);
+  assert.doesNotMatch(r.stdout, /Background/);
+  assert.match(r.stdout, /✓ Resume {7}READY/);
 });

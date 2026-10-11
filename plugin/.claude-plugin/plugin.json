@@ -1,7 +1,7 @@
 {
   "name": "brb",
   "displayName": "BRB — Be Right Back",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Pause with /brb, resume with /brb:continue. BRB saves a structured, local checkpoint of your task, progress, next step, decisions, tests and repository state, then verifies the repository before you pick the work back up. Optional Auto-BRB saves checkpoints before context compaction and at session end.",
   "author": {
     "name": "g4lb",

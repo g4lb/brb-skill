@@ -15,7 +15,9 @@ Usage: brb <command> [options]
 
 Commands
   save               Save a manual checkpoint. Task context JSON on stdin or --input <file>.
-  resume [--id ID]   Select a checkpoint, verify the repository, print a resume briefing.
+  resume [--id ID] [--session ID]
+                     Select a checkpoint, verify the repository, print a resume briefing.
+                     --session tells BRB whether background work from the checkpoint can still run.
   status             Show checkpoint and Auto-BRB status for this project.
   list               List checkpoints for this project.
   show [ID]          Print a checkpoint's handoff (newest if no ID).

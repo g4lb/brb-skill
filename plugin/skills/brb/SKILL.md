@@ -51,6 +51,8 @@ Use the Bash `description` **BRB · saving checkpoint** for the save command, so
 - Do not start new changes.
 - If an edit is half done and would leave a file broken, finish only that edit. Otherwise stop now.
 - Never commit, push, stash, reset, revert, or discard changes. Never stop or kill processes. Never delete files. BRB records state. It does not change it.
+- Do not start new background work (subagents, background commands). Do not send new messages to running subagents.
+- Find all background work that is still running: subagents, background Bash commands, monitors. Record each in `backgroundWork` (step 2). Do not stop it.
 
 ### 2. Write the task context
 
@@ -69,12 +71,14 @@ Write a JSON object from what you know in this conversation. Include only facts 
 | `tests` | Test runs from this session: `{"command": "...", "result": "passed" \| "failed" \| "partial" \| "not-run" \| "unknown", "summary": "..."}`. Use the real result. Do not report a test you did not run. |
 | `files` | Relevant files as project-relative paths, optionally with a note: `{"path": "src/auth.ts", "note": "refresh logic here"}`. |
 | `runningProcesses` | Background processes you started that may still run (for example "dev server on port 3000, started with npm run dev"). Do not stop them. |
+| `backgroundWork` | Work that is still running in the background and can change files after the checkpoint: subagents, background commands. For each item, say what it does, which files or branch it changes, and where its result goes (for example "subagent: final review fixes on branch feat/x, edits apps/api/src, writes report to docs/fix-report.md"). Do not put this work in `completed`. |
 | `relevantTools` | Tools or services the work depends on. |
 | `notes` | Anything else a new session needs. Include the developer's note, if they gave one. |
 | `resumeInstructions` | Special steps for resuming (for example "run npm install first"). |
 
 Rules:
 
+- If `backgroundWork` is not empty, `nextAction` must work in a new session too, where that work has stopped. Do not write only "wait for the subagent". Write how to check its result on disk (commits, files, report) and what to do if it did not finish.
 - Do not copy secrets, tokens, passwords, keys, or `.env` values into any field. BRB redacts common secret formats, but it cannot catch everything.
 - Do not copy file contents. Give paths. BRB records git state and file hashes by itself.
 - Keep each list item to one line.
@@ -98,3 +102,11 @@ If the shell does not support `<<'BRB_JSON'` here-documents (for example PowerSh
 - **Exit code not 0:** the checkpoint was **not** saved. Show the error and the hint from the output. Do not say the checkpoint is saved. If the error is about the JSON, fix the JSON and try again once.
 
 Then stop. Do not continue the task after a pause.
+
+### 5. After the pause
+
+The developer may be away. Background work keeps running, and when it finishes you get a notification. This is not a request to continue.
+
+- When a background task notification arrives after the pause, write one line: what finished, and whether it succeeded. Then stop.
+- Do not start the next step. Do not commit, push, open or merge pull requests, deploy, edit files, or start or message agents.
+- Continue only when the developer writes again, for example with `/brb continue`.

@@ -71,7 +71,7 @@ function isSensitivePath(p) {
 }
 
 // src/version.ts
-var VERSION = "1.0.0";
+var VERSION = "1.1.0";
 
 // src/checkpoint/git.ts
 import { execFileSync } from "node:child_process";
@@ -498,7 +498,7 @@ var Validator = class {
 };
 
 // src/checkpoint/types.ts
-var SCHEMA_VERSION = 1;
+var SCHEMA_VERSION = 2;
 
 // src/checkpoint/schema.ts
 var LIMITS = {
@@ -516,7 +516,14 @@ function computeDigest(cp) {
   void _ignored;
   return createHash2("sha256").update(canonicalJson(rest)).digest("hex");
 }
-var MIGRATIONS = {};
+var MIGRATIONS = {
+  // v2 adds environment.backgroundWork; v1 checkpoints recorded none.
+  1: (doc) => ({
+    ...doc,
+    schemaVersion: 2,
+    environment: isPlainObject(doc.environment) ? { ...doc.environment, backgroundWork: [] } : doc.environment
+  })
+};
 function parseCheckpoint(json, migrations = MIGRATIONS) {
   let raw;
   try {
@@ -632,11 +639,12 @@ function validateCheckpointShape(doc) {
   }
   for (const k of ["decisions", "blockers", "assumptions"]) v.stringArray(d[k], k, LIMITS.items, LIMITS.item);
   v.array(d.tests, "tests", LIMITS.items, (el, p) => validateTest(v, el, p));
-  if (v.object(d.environment, "environment", ["platform", "nodeVersion", "relevantTools", "runningProcesses"])) {
+  if (v.object(d.environment, "environment", ["platform", "nodeVersion", "relevantTools", "runningProcesses", "backgroundWork"])) {
     v.string(d.environment.platform, "environment.platform", { max: 64 });
     v.string(d.environment.nodeVersion, "environment.nodeVersion", { max: 64 });
     v.stringArray(d.environment.relevantTools, "environment.relevantTools", LIMITS.items, LIMITS.item);
     v.stringArray(d.environment.runningProcesses, "environment.runningProcesses", LIMITS.items, LIMITS.item);
+    v.stringArray(d.environment.backgroundWork, "environment.backgroundWork", LIMITS.items, LIMITS.item);
   }
   if (d.context !== null && v.object(d.context, "context", ["recentUserPrompts", "lastAssistantMessage"])) {
     v.stringArray(d.context.recentUserPrompts, "context.recentUserPrompts", 20, LIMITS.text);
@@ -706,6 +714,7 @@ var SAVE_FIELDS = [
   "tests",
   "files",
   "runningProcesses",
+  "backgroundWork",
   "relevantTools",
   "notes",
   "resumeInstructions",
@@ -719,7 +728,7 @@ function validateSaveInput(raw) {
   v.string(d.nextAction, "nextAction", { max: LIMITS.text, optional: true });
   v.string(d.notes, "notes", { max: LIMITS.text, optional: true });
   v.string(d.resumeInstructions, "resumeInstructions", { max: LIMITS.text, optional: true });
-  for (const k of ["completed", "inProgress", "remaining", "decisions", "blockers", "assumptions", "runningProcesses", "relevantTools", "warnings"]) {
+  for (const k of ["completed", "inProgress", "remaining", "decisions", "blockers", "assumptions", "runningProcesses", "backgroundWork", "relevantTools", "warnings"]) {
     if (d[k] !== void 0) v.stringArray(d[k], k, LIMITS.items, LIMITS.item);
   }
   if (d.tests !== void 0) v.array(d.tests, "tests", LIMITS.items, (el, p) => validateTest(v, el, p));
@@ -816,6 +825,7 @@ function clampToLimits(b) {
   b.tests = b.tests.slice(0, LIMITS.items).map((t) => ({ ...t, command: cut(t.command, LIMITS.item), ...t.summary === void 0 ? {} : { summary: cut(t.summary, LIMITS.item) } }));
   b.environment.relevantTools = cutList(b.environment.relevantTools, LIMITS.items, LIMITS.item);
   b.environment.runningProcesses = cutList(b.environment.runningProcesses, LIMITS.items, LIMITS.item);
+  b.environment.backgroundWork = cutList(b.environment.backgroundWork, LIMITS.items, LIMITS.item);
   if (b.context) {
     b.context.recentUserPrompts = cutList(b.context.recentUserPrompts, 20, LIMITS.text);
     b.context.lastAssistantMessage = cutNullable(b.context.lastAssistantMessage, LIMITS.text);
@@ -860,7 +870,7 @@ function buildCheckpoint(o) {
   const counter = { count: 0 };
   const r = (v) => redactDeep(v, counter);
   const body = {
-    schemaVersion: 1,
+    schemaVersion: SCHEMA_VERSION,
     checkpointId: randomUUID(),
     createdAt: (o.now ?? /* @__PURE__ */ new Date()).toISOString(),
     type: o.type,
@@ -881,7 +891,8 @@ function buildCheckpoint(o) {
       platform: process.platform,
       nodeVersion: process.version,
       relevantTools: r(cleanList(input.relevantTools)),
-      runningProcesses: r(cleanList(input.runningProcesses))
+      runningProcesses: r(cleanList(input.runningProcesses)),
+      backgroundWork: r(cleanList(input.backgroundWork))
     },
     context: o.transcript ? r({ recentUserPrompts: o.transcript.recentUserPrompts, lastAssistantMessage: o.transcript.lastAssistantMessage }) : null,
     notes: r(clean(input.notes)),
@@ -1030,6 +1041,12 @@ function renderHandoff(cp) {
   out.push("## Remaining");
   out.push(list(t.remaining));
   out.push("");
+  if (cp.environment.backgroundWork.length > 0) {
+    out.push("## Background work at checkpoint time");
+    out.push("This work was still running when the checkpoint was saved. It may have changed files after the checkpoint, and it stops when its session ends. Check whether it finished, is still running, or was lost before you start it again.");
+    out.push(list(cp.environment.backgroundWork));
+    out.push("");
+  }
   out.push("## Decisions");
   out.push(list(cp.decisions));
   out.push("");
@@ -1474,6 +1491,11 @@ function cmdSave(argv, ctx) {
   } else {
     lines.push(step("\u2013", "Repository", `git unavailable (${git.reason}); relevant files fingerprinted only`));
   }
+  const background = checkpoint.environment.backgroundWork;
+  if (background.length > 0) {
+    lines.push(step("!", "Background", `${plural(background.length, "task")} still running; files may change after this checkpoint`));
+    for (const b of background.slice(0, 5)) lines.push(sub(`- ${firstLine(b)}`));
+  }
   const taskParts = [
     t.objective ? "objective" : "objective missing",
     t.nextAction ? "next step" : "next step missing",
@@ -1494,6 +1516,7 @@ function cmdSave(argv, ctx) {
   if (missing.length > 0) lines.push(`Missing: ${missing.join(", ")}. Run /brb again with these details for a complete checkpoint.`);
   lines.push("");
   lines.push(missing.length > 0 ? "The checkpoint is usable, but incomplete." : "You can leave now.");
+  if (background.length > 0) lines.push("Background work keeps running while you are away. It stops if you close this session.");
   lines.push("Run /brb continue when you're back.");
   ctx.stdout(lines.join("\n"));
   return 0;
@@ -1649,6 +1672,15 @@ var VERIFY_LABEL = {
   conflict: "CONFLICTS DETECTED \u2014 review before continuing",
   limited: "LIMITED \u2014 full verification was not possible"
 };
+function backgroundSession(cp, sessionId2) {
+  if (!sessionId2 || !cp.session.id) return "unknown";
+  return sessionId2 === cp.session.id ? "same" : "new";
+}
+var BACKGROUND_LABEL = {
+  same: "same session \u2014 it may still be running; check its status before you edit the files it changes or start it again",
+  new: "new session \u2014 it stopped when the earlier session ended; only what it wrote to disk remains, and it may be incomplete",
+  unknown: "it may still be running (same session) or may have stopped (new session); check before you start it again"
+};
 function cmdResume(argv, ctx) {
   const { flags } = parseArgs(argv, ["json", "no-mark"]);
   const project = resolveProject(ctx.cwd, ctx.env);
@@ -1690,7 +1722,9 @@ function cmdResume(argv, ctx) {
     currentBranch: current.available ? current.branch : null,
     findings: comparison.findings
   });
-  const needsInput = sel.needsChoice || sel.branchMismatch || comparison.level === "conflict" || cp.partial || cp.task.source !== "claude" || contentWarnings.length > 0;
+  const bg = backgroundSession(cp, flagString(flags, "session"));
+  const lostBackground = cp.environment.backgroundWork.length > 0 && bg === "new";
+  const needsInput = sel.needsChoice || sel.branchMismatch || comparison.level === "conflict" || cp.partial || cp.task.source !== "claude" || contentWarnings.length > 0 || lostBackground;
   if (!flags["no-mark"]) {
     try {
       withProjectLock(project, () => {
@@ -1706,15 +1740,16 @@ function cmdResume(argv, ctx) {
       status: needsInput ? "needs-input" : "ready",
       selection: { checkpointId: cp.checkpointId, reason: sel.reason, needsChoice: sel.needsChoice, branchMismatch: sel.branchMismatch, alternatives: sel.alternatives.map((a) => a.checkpoint.checkpointId) },
       verification: { level: comparison.level, findings: comparison.findings },
+      background: { work: cp.environment.backgroundWork, session: bg },
       contentWarnings,
       checkpoint: cp
     }, null, 2));
     return 0;
   }
-  ctx.stdout(renderBriefing(cp, sel, comparison, contentWarnings, needsInput, listing.broken.length, now, sel.selected.migratedFrom));
+  ctx.stdout(renderBriefing(cp, sel, comparison, contentWarnings, needsInput, listing.broken.length, now, sel.selected.migratedFrom, bg));
   return 0;
 }
-function renderBriefing(cp, sel, cmp, contentWarnings, needsInput, brokenCount, now, migratedFrom) {
+function renderBriefing(cp, sel, cmp, contentWarnings, needsInput, brokenCount, now, migratedFrom, bg = "unknown") {
   const out = [];
   const t = cp.task;
   out.push("BRB \u2014 Checkpoint found");
@@ -1729,11 +1764,15 @@ function renderBriefing(cp, sel, cmp, contentWarnings, needsInput, brokenCount, 
   else if (t.source === "none") out.push(step("\u2717", "Context", "no task context, only repository metadata; ask the developer what to work on"));
   else if (cp.partial) out.push(step("\u2717", "Context", `partial: objective or next step was not recorded \xB7 ${progress}`));
   else out.push(step("\u2713", "Context", `objective \xB7 next step \xB7 ${progress}`));
+  const background = cp.environment.backgroundWork;
   const repoMark = { passed: "\u2713", changed: "!", conflict: "\u2717", limited: "\u2013" }[cmp.level];
-  out.push(step(repoMark, "Repository", VERIFY_LABEL[cmp.level]));
+  out.push(step(repoMark, "Repository", cmp.level === "changed" && background.length > 0 ? "CHANGES DETECTED \u2014 background work was running at checkpoint time; these changes may be its output" : VERIFY_LABEL[cmp.level]));
   if (cmp.current && cmp.current.available) out.push(sub(`Now on ${cmp.current.branch ?? "(detached)"} at ${cmp.current.head?.slice(0, 8) ?? "no commits"}`));
   for (const f of cmp.findings) out.push(sub(`- ${f}`));
   if (cmp.findings.length === 0) out.push(sub("- No differences found."));
+  if (background.length > 0) {
+    out.push(step("!", "Background", `${background.length === 1 ? "1 task was" : `${background.length} tasks were`} running at checkpoint time \xB7 ${BACKGROUND_LABEL[bg]}`));
+  }
   if (sel.branchMismatch) out.push(step("!", "Branch", "No checkpoint exists for the current branch; this one is from another branch."));
   if (sel.needsChoice) {
     out.push(step("!", "Choice", "CHOICE NEEDED \u2014 a newer automatic checkpoint exists:"));
@@ -2329,7 +2368,9 @@ Usage: brb <command> [options]
 
 Commands
   save               Save a manual checkpoint. Task context JSON on stdin or --input <file>.
-  resume [--id ID]   Select a checkpoint, verify the repository, print a resume briefing.
+  resume [--id ID] [--session ID]
+                     Select a checkpoint, verify the repository, print a resume briefing.
+                     --session tells BRB whether background work from the checkpoint can still run.
   status             Show checkpoint and Auto-BRB status for this project.
   list               List checkpoints for this project.
   show [ID]          Print a checkpoint's handoff (newest if no ID).

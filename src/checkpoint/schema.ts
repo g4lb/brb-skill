@@ -24,11 +24,16 @@ export function computeDigest(cp: Omit<Checkpoint, 'integrity'> | Checkpoint): s
 
 /**
  * Migrations from older schema versions, keyed by the version they upgrade
- * from. Each returns a document of version + 1. Version 1 is the first
- * release, so the table is empty; it exists so future versions can load
- * checkpoints written by v1.
+ * from. Each returns a document of version + 1.
  */
-export const MIGRATIONS: Record<number, (doc: Record<string, unknown>) => Record<string, unknown>> = {};
+export const MIGRATIONS: Record<number, (doc: Record<string, unknown>) => Record<string, unknown>> = {
+  // v2 adds environment.backgroundWork; v1 checkpoints recorded none.
+  1: (doc) => ({
+    ...doc,
+    schemaVersion: 2,
+    environment: isPlainObject(doc.environment) ? { ...doc.environment, backgroundWork: [] } : doc.environment,
+  }),
+};
 
 export type LoadResult =
   | { ok: true; checkpoint: Checkpoint; migratedFrom?: number }
@@ -133,11 +138,12 @@ export function validateCheckpointShape(doc: unknown): string[] {
   }
   for (const k of ['decisions', 'blockers', 'assumptions'] as const) v.stringArray(d[k], k, LIMITS.items, LIMITS.item);
   v.array(d.tests, 'tests', LIMITS.items, (el, p) => validateTest(v, el, p));
-  if (v.object(d.environment, 'environment', ['platform', 'nodeVersion', 'relevantTools', 'runningProcesses'])) {
+  if (v.object(d.environment, 'environment', ['platform', 'nodeVersion', 'relevantTools', 'runningProcesses', 'backgroundWork'])) {
     v.string(d.environment.platform, 'environment.platform', { max: 64 });
     v.string(d.environment.nodeVersion, 'environment.nodeVersion', { max: 64 });
     v.stringArray(d.environment.relevantTools, 'environment.relevantTools', LIMITS.items, LIMITS.item);
     v.stringArray(d.environment.runningProcesses, 'environment.runningProcesses', LIMITS.items, LIMITS.item);
+    v.stringArray(d.environment.backgroundWork, 'environment.backgroundWork', LIMITS.items, LIMITS.item);
   }
   if (d.context !== null && v.object(d.context, 'context', ['recentUserPrompts', 'lastAssistantMessage'])) {
     v.stringArray(d.context.recentUserPrompts, 'context.recentUserPrompts', 20, LIMITS.text);
@@ -200,7 +206,7 @@ function validateGit(v: Validator, git: unknown): void {
 
 const SAVE_FIELDS = [
   'objective', 'completed', 'inProgress', 'remaining', 'nextAction', 'decisions', 'blockers', 'assumptions',
-  'tests', 'files', 'runningProcesses', 'relevantTools', 'notes', 'resumeInstructions', 'warnings',
+  'tests', 'files', 'runningProcesses', 'backgroundWork', 'relevantTools', 'notes', 'resumeInstructions', 'warnings',
 ] as const;
 
 /** Strictly validate task input supplied to `brb save`. */
@@ -212,7 +218,7 @@ export function validateSaveInput(raw: unknown): { ok: true; input: SaveInput } 
   v.string(d.nextAction, 'nextAction', { max: LIMITS.text, optional: true });
   v.string(d.notes, 'notes', { max: LIMITS.text, optional: true });
   v.string(d.resumeInstructions, 'resumeInstructions', { max: LIMITS.text, optional: true });
-  for (const k of ['completed', 'inProgress', 'remaining', 'decisions', 'blockers', 'assumptions', 'runningProcesses', 'relevantTools', 'warnings'] as const) {
+  for (const k of ['completed', 'inProgress', 'remaining', 'decisions', 'blockers', 'assumptions', 'runningProcesses', 'backgroundWork', 'relevantTools', 'warnings'] as const) {
     if (d[k] !== undefined) v.stringArray(d[k], k, LIMITS.items, LIMITS.item);
   }
   if (d.tests !== undefined) v.array(d.tests, 'tests', LIMITS.items, (el, p) => validateTest(v, el, p));

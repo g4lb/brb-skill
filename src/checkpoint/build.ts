@@ -5,7 +5,7 @@ import { changedPaths } from './git.js';
 import { computeDigest, LIMITS, validateCheckpointShape } from './schema.js';
 import { snapshotFiles } from './snapshot.js';
 import type { ProjectIdentity } from './paths.js';
-import type { Checkpoint, CheckpointTrigger, CheckpointType, GitState, RelevantFile, SaveInput, TaskState } from './types.js';
+import { SCHEMA_VERSION, type Checkpoint, type CheckpointTrigger, type CheckpointType, type GitState, type RelevantFile, type SaveInput, type TaskState } from './types.js';
 
 export interface TranscriptContext {
   recentUserPrompts: string[];
@@ -49,6 +49,7 @@ function clampToLimits(b: Omit<Checkpoint, 'integrity'>): void {
   b.tests = b.tests.slice(0, LIMITS.items).map((t) => ({ ...t, command: cut(t.command, LIMITS.item), ...(t.summary === undefined ? {} : { summary: cut(t.summary, LIMITS.item) }) }));
   b.environment.relevantTools = cutList(b.environment.relevantTools, LIMITS.items, LIMITS.item);
   b.environment.runningProcesses = cutList(b.environment.runningProcesses, LIMITS.items, LIMITS.item);
+  b.environment.backgroundWork = cutList(b.environment.backgroundWork, LIMITS.items, LIMITS.item);
   if (b.context) {
     b.context.recentUserPrompts = cutList(b.context.recentUserPrompts, 20, LIMITS.text);
     b.context.lastAssistantMessage = cutNullable(b.context.lastAssistantMessage, LIMITS.text);
@@ -99,7 +100,7 @@ export function buildCheckpoint(o: BuildOptions): { checkpoint: Checkpoint; miss
   const r = <T>(v: T): T => redactDeep(v, counter);
 
   const body: Omit<Checkpoint, 'integrity'> = {
-    schemaVersion: 1,
+    schemaVersion: SCHEMA_VERSION,
     checkpointId: randomUUID(),
     createdAt: (o.now ?? new Date()).toISOString(),
     type: o.type,
@@ -121,6 +122,7 @@ export function buildCheckpoint(o: BuildOptions): { checkpoint: Checkpoint; miss
       nodeVersion: process.version,
       relevantTools: r(cleanList(input.relevantTools)),
       runningProcesses: r(cleanList(input.runningProcesses)),
+      backgroundWork: r(cleanList(input.backgroundWork)),
     },
     context: o.transcript ? r({ recentUserPrompts: o.transcript.recentUserPrompts, lastAssistantMessage: o.transcript.lastAssistantMessage }) : null,
     notes: r(clean(input.notes)),

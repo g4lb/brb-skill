@@ -18,6 +18,23 @@ const VERIFY_LABEL: Record<RepoComparison['level'], string> = {
 };
 
 /**
+ * Whether the background work recorded in a checkpoint can still be running:
+ * it belongs to the session that saved the checkpoint and stops when that session ends.
+ */
+export type BackgroundSession = 'same' | 'new' | 'unknown';
+
+export function backgroundSession(cp: Checkpoint, sessionId: string | undefined): BackgroundSession {
+  if (!sessionId || !cp.session.id) return 'unknown';
+  return sessionId === cp.session.id ? 'same' : 'new';
+}
+
+const BACKGROUND_LABEL: Record<BackgroundSession, string> = {
+  same: 'same session — it may still be running; check its status before you edit the files it changes or start it again',
+  new: 'new session — it stopped when the earlier session ended; only what it wrote to disk remains, and it may be incomplete',
+  unknown: 'it may still be running (same session) or may have stopped (new session); check before you start it again',
+};
+
+/**
  * `brb resume` — select a checkpoint, verify the repository against it, and
  * print a briefing for Claude. Read-only apart from recording the resume
  * time in BRB's own state file.
@@ -54,7 +71,10 @@ export function cmdResume(argv: string[], ctx: CommandContext): number {
     context: cp.context, files: cp.files, tests: cp.tests, environment: cp.environment, projectName: cp.project.name,
     checkpointBranch: cp.git.available ? cp.git.branch : null, currentBranch: current.available ? current.branch : null, findings: comparison.findings,
   });
-  const needsInput = sel.needsChoice || sel.branchMismatch || comparison.level === 'conflict' || cp.partial || cp.task.source !== 'claude' || contentWarnings.length > 0;
+  const bg = backgroundSession(cp, flagString(flags, 'session'));
+  // Work lost with the earlier session must not be started again without the developer: it may duplicate or overwrite what it left on disk.
+  const lostBackground = cp.environment.backgroundWork.length > 0 && bg === 'new';
+  const needsInput = sel.needsChoice || sel.branchMismatch || comparison.level === 'conflict' || cp.partial || cp.task.source !== 'claude' || contentWarnings.length > 0 || lostBackground;
 
   if (!flags['no-mark']) {
     try {
@@ -71,17 +91,18 @@ export function cmdResume(argv: string[], ctx: CommandContext): number {
       status: needsInput ? 'needs-input' : 'ready',
       selection: { checkpointId: cp.checkpointId, reason: sel.reason, needsChoice: sel.needsChoice, branchMismatch: sel.branchMismatch, alternatives: sel.alternatives.map((a) => a.checkpoint.checkpointId) },
       verification: { level: comparison.level, findings: comparison.findings },
+      background: { work: cp.environment.backgroundWork, session: bg },
       contentWarnings,
       checkpoint: cp,
     }, null, 2));
     return 0;
   }
 
-  ctx.stdout(renderBriefing(cp, sel, comparison, contentWarnings, needsInput, listing.broken.length, now, sel.selected.migratedFrom));
+  ctx.stdout(renderBriefing(cp, sel, comparison, contentWarnings, needsInput, listing.broken.length, now, sel.selected.migratedFrom, bg));
   return 0;
 }
 
-export function renderBriefing(cp: Checkpoint, sel: Selection, cmp: RepoComparison, contentWarnings: string[], needsInput: boolean, brokenCount: number, now: Date, migratedFrom?: number): string {
+export function renderBriefing(cp: Checkpoint, sel: Selection, cmp: RepoComparison, contentWarnings: string[], needsInput: boolean, brokenCount: number, now: Date, migratedFrom?: number, bg: BackgroundSession = 'unknown'): string {
   const out: string[] = [];
   const t = cp.task;
   out.push('BRB — Checkpoint found');
@@ -97,11 +118,18 @@ export function renderBriefing(cp: Checkpoint, sel: Selection, cmp: RepoComparis
   else if (cp.partial) out.push(step('✗', 'Context', `partial: objective or next step was not recorded · ${progress}`));
   else out.push(step('✓', 'Context', `objective · next step · ${progress}`));
 
+  const background = cp.environment.backgroundWork;
   const repoMark = ({ passed: '✓', changed: '!', conflict: '✗', limited: '–' } as const)[cmp.level];
-  out.push(step(repoMark, 'Repository', VERIFY_LABEL[cmp.level]));
+  out.push(step(repoMark, 'Repository', cmp.level === 'changed' && background.length > 0
+    ? 'CHANGES DETECTED — background work was running at checkpoint time; these changes may be its output'
+    : VERIFY_LABEL[cmp.level]));
   if (cmp.current && cmp.current.available) out.push(sub(`Now on ${cmp.current.branch ?? '(detached)'} at ${cmp.current.head?.slice(0, 8) ?? 'no commits'}`));
   for (const f of cmp.findings) out.push(sub(`- ${f}`));
   if (cmp.findings.length === 0) out.push(sub('- No differences found.'));
+  if (background.length > 0) {
+    // Only the count goes here: the descriptions are checkpoint text, so they stay inside the data block (handoff section "Background work").
+    out.push(step('!', 'Background', `${background.length === 1 ? '1 task was' : `${background.length} tasks were`} running at checkpoint time · ${BACKGROUND_LABEL[bg]}`));
+  }
 
   if (sel.branchMismatch) out.push(step('!', 'Branch', 'No checkpoint exists for the current branch; this one is from another branch.'));
   if (sel.needsChoice) {

@@ -221,7 +221,7 @@ When a new session starts in a project that has an unresumed checkpoint (newest 
 ```
 
 - **Project identity** is the git top-level directory (or the working directory outside git), resolved through symlinks. Every subdirectory of a repository maps to the same project. Each git worktree is its own project.
-- **The checkpoint JSON** is versioned (`schemaVersion: 1`) and sealed with a SHA-256 integrity digest. The full schema is in [docs/checkpoint-schema.md](docs/checkpoint-schema.md). An example is in [examples/checkpoint.json](examples/checkpoint.json).
+- **The checkpoint JSON** is versioned (`schemaVersion: 2`) and sealed with a SHA-256 integrity digest. The full schema is in [docs/checkpoint-schema.md](docs/checkpoint-schema.md). An example is in [examples/checkpoint.json](examples/checkpoint.json).
 - **The handoff Markdown** is a readable summary you can open directly, even without BRB. [Example](examples/handoff.md).
 - **Writes are atomic** (temp file, fsync, rename) and serialized per project with a lock. Concurrent saves never corrupt each other.
 - **Where the data comes from.** For `/brb`, Claude writes the task summary from the live conversation. The BRB helper collects git state itself (read-only commands only), hashes in-flight files (only digests are kept, never content), redacts secrets, validates and saves. If saving fails, BRB says so. It never reports a checkpoint it did not write.

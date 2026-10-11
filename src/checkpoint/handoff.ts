@@ -49,6 +49,12 @@ export function renderHandoff(cp: Checkpoint): string {
   out.push('## Remaining');
   out.push(list(t.remaining));
   out.push('');
+  if (cp.environment.backgroundWork.length > 0) {
+    out.push('## Background work at checkpoint time');
+    out.push('This work was still running when the checkpoint was saved. It may have changed files after the checkpoint, and it stops when its session ends. Check whether it finished, is still running, or was lost before you start it again.');
+    out.push(list(cp.environment.backgroundWork));
+    out.push('');
+  }
 
   out.push('## Decisions');
   out.push(list(cp.decisions));

@@ -7,7 +7,8 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook pre-compact",
-            "timeout": 30
+            "timeout": 30,
+            "statusMessage": "⏸ BRB · tucking your work into a checkpoint before compaction…"
           }
         ]
       }
@@ -18,7 +19,8 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook session-end",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "⏸ BRB · bookmarking this session on the way out…"
           }
         ]
       }
@@ -30,7 +32,8 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook session-start",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "▶ BRB · looking for where you left off…"
           }
         ]
       }
@@ -42,7 +45,8 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/brb/scripts/brb.mjs\" hook post-tool-use",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "✓ BRB · checking for a milestone…"
           }
         ]
       },

@@ -1,4 +1,4 @@
-# Checkpoint schema (version 1)
+# Checkpoint schema (version 2)
 
 Each checkpoint is one JSON file in `~/.brb/projects/<name>-<hash>/checkpoints/`, named `<UTC timestamp>-<manual|auto>-<first 8 id chars>.json`. A Markdown handoff with the same base name is in `handoffs/`.
 
@@ -6,7 +6,7 @@ A complete real example: [`examples/checkpoint.json`](../examples/checkpoint.jso
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `schemaVersion` | `1` | Required. Older versions are migrated on load. Newer versions are refused with an upgrade message. |
+| `schemaVersion` | `2` | Required. Older versions are migrated on load. Newer versions are refused with an upgrade message. |
 | `checkpointId` | UUID v4 | |
 | `createdAt` | ISO-8601 UTC | |
 | `type` | `"manual"` \| `"auto"` | |
@@ -22,7 +22,7 @@ A complete real example: [`examples/checkpoint.json`](../examples/checkpoint.jso
 | `snapshot` | `{ files[], truncated }` | SHA-256 and size of in-flight and relevant files at save time, never content. `skipped` explains unhashed entries: `missing`, `too-large` (>5 MB), `sensitive`, `symlink`, `not-a-file`, `outside-project`, `limit`. |
 | `decisions[]`, `blockers[]`, `assumptions[]` | string[] | |
 | `tests[]` | `{ command, result, summary? }` | `result`: `passed`, `failed`, `partial`, `not-run`, `unknown`. |
-| `environment` | object | `platform`, `nodeVersion`, `relevantTools[]`, `runningProcesses[]` (as reported by Claude; BRB does not inspect processes). |
+| `environment` | object | `platform`, `nodeVersion`, `relevantTools[]`, `runningProcesses[]` (as reported by Claude; BRB does not inspect processes), `backgroundWork[]` (subagents and background commands still running at save time, which can change files after the checkpoint; added in version 2). |
 | `context` | object \| null | Automatic checkpoints: `recentUserPrompts[]` (up to 5, each truncated to 1,000 chars) and `lastAssistantMessage`. |
 | `notes` | string \| null | |
 | `resume` | `{ instructions, warnings[] }` | |
@@ -45,7 +45,11 @@ Files that fail are listed as damaged by `/brb list` and skipped by `/brb:contin
 
 ## Migrations
 
-`MIGRATIONS` in `src/checkpoint/schema.ts` maps each old version to a function that upgrades the document by one version. Before migrating, the loader checks the original document's digest, then re-seals the migrated document in memory. Migration never rewrites files on disk. Version 1 is the first release, so the table is empty.
+`MIGRATIONS` in `src/checkpoint/schema.ts` maps each old version to a function that upgrades the document by one version. Before migrating, the loader checks the original document's digest, then re-seals the migrated document in memory. Migration never rewrites files on disk.
+
+| From | To | Change |
+| --- | --- | --- |
+| 1 | 2 | Adds `environment.backgroundWork` as an empty list. |
 
 When changing the schema:
 

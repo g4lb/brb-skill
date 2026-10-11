@@ -4,6 +4,23 @@ All notable changes to this project are documented here. This project follows [S
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-10-11
+
+### Fixed
+
+- Pausing while background work ran (a subagent or a background command) saved a checkpoint that showed the repository as settled. That work kept changing files after the checkpoint, and `/brb continue` then reported its edits as unexplained changes. When the background work finished, Claude could also continue the task while the developer was away.
+
+### Added
+
+- `backgroundWork` in the task context. `/brb` records running background work and shows `! Background … still running; files may change after this checkpoint`.
+- `brb resume --session <id>`. The resume briefing says whether background work from the checkpoint can still run (same session) or stopped with the earlier session (new session; `NEEDS INPUT`), and explains changes it made.
+- The pause skill tells Claude not to continue the task when a background task finishes after the pause.
+- Hook status messages. Claude Code shows its spinner with a BRB message while a BRB hook runs (for example "⏸ BRB · tucking your work into a checkpoint before compaction…").
+
+### Changed
+
+- Checkpoint schema version 2 (adds `environment.backgroundWork`). Version 1 checkpoints are migrated on load. BRB 1.0.0 refuses version 2 checkpoints with an upgrade message.
+
 ## [1.0.0] — 2026-10-11
 
 First stable release. Install with `/plugin marketplace add g4lb/brb-skill` then `/plugin install brb@brb`, or skills only with `npx skills add g4lb/brb-skill`.
