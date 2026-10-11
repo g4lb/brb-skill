@@ -236,7 +236,7 @@ Set `BRB_HOME` to store data elsewhere. Checkpoints are never written inside you
 - **Untrusted on load.** When BRB loads a checkpoint, it validates it strictly and strips terminal escape and bidi control characters. It then wraps the content in a `<brb-checkpoint-data>` block that Claude is told to treat as data, not instructions. Text that tries to close that block early is neutralized. Instruction-like or destructive content ("ignore previous instructions", `git reset --hard`, …) is flagged, and Claude must ask you before continuing. A checkpoint can't change BRB's configuration or Claude Code's permissions. Claude still asks for approval for every action as usual.
 - **Filesystem safety.** Storage directories are created `0700` and files `0600`. Symlinked storage paths and symlinked checkpoint files are refused. Project-relative paths with `..` or absolute paths are rejected. File reads are size-limited.
 
-Full threat model: [SECURITY.md](SECURITY.md).
+Full threat model: [SECURITY.md](SECURITY.md). Privacy policy: [PRIVACY.md](PRIVACY.md).
 
 ## Supported platforms
 

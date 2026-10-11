@@ -1,13 +1,18 @@
 {
   "name": "brb",
+  "displayName": "BRB — Be Right Back",
   "version": "1.0.0",
-  "description": "Be Right Back: pause with /brb, resume with /continue. Structured, local checkpoints of your task, decisions, tests and repository state, with optional automatic checkpoints before compaction and at session end.",
+  "description": "Pause with /brb, resume with /brb:continue. BRB saves a structured, local checkpoint of your task, progress, next step, decisions, tests and repository state, then verifies the repository before you pick the work back up. Optional Auto-BRB saves checkpoints before context compaction and at session end.",
   "author": {
     "name": "g4lb",
     "email": "galevgi@gmail.com"
   },
   "homepage": "https://github.com/g4lb/brb-skill",
   "repository": "https://github.com/g4lb/brb-skill",
+  "documentationUrl": "https://github.com/g4lb/brb-skill#readme",
+  "supportUrl": "https://github.com/g4lb/brb-skill/issues",
+  "privacyPolicyUrl": "https://github.com/g4lb/brb-skill/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/g4lb/brb-skill/blob/main/LICENSE",
   "license": "MIT",
   "keywords": [
     "checkpoint",
