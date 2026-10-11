@@ -1,0 +1,13 @@
+{
+  "objective": "Implement authentication: login, token storage and token refresh for the web client.",
+  "completed": ["Login flow (src/auth/login.ts)", "Token storage in httpOnly cookies", "Error handling for 401 responses"],
+  "inProgress": ["Token refresh: request logic written in src/auth/refresh.ts, retry-on-401 not wired yet"],
+  "remaining": ["Logout endpoint", "Integration tests for refresh"],
+  "nextAction": "In src/auth/refresh.ts, wire refreshToken() into the fetch wrapper so a 401 triggers one refresh and a retry; then run npm test.",
+  "decisions": ["Use httpOnly cookies instead of localStorage (XSS exposure)", "Refresh at most once per request to avoid loops"],
+  "blockers": ["Backend refresh endpoint returns 500 when the refresh token is expired; reported to API team"],
+  "tests": [{ "command": "npm test", "result": "failed", "summary": "1 failing: refresh retries twice on expired token" }],
+  "files": [{ "path": "src/auth/refresh.ts", "note": "refresh logic, unfinished" }, { "path": "src/auth/login.ts" }],
+  "runningProcesses": ["Dev server: npm run dev on port 5173 (started by Claude)"],
+  "notes": "API base URL comes from VITE_API_URL; do not hard-code it."
+}

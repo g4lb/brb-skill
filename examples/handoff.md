@@ -1,0 +1,57 @@
+# BRB handoff — my-awesome-app
+
+- **Checkpoint:** `ac194f4f-e91f-4aa7-863c-fdf43f32fff9` (manual, trigger: manual)
+- **Saved:** 2026-10-11T07:57:07.545Z
+- **Project root:** `/home/dev/my-awesome-app`
+- **Branch:** `feature/authentication` at `fb95873b7b05`
+
+## Current task
+
+Implement authentication: login, token storage and token refresh for the web client.
+
+## Next step
+In src/auth/refresh.ts, wire refreshToken() into the fetch wrapper so a 401 triggers one refresh and a retry; then run npm test.
+
+## Completed
+- Login flow (src/auth/login.ts)
+- Token storage in httpOnly cookies
+- Error handling for 401 responses
+
+## In progress
+- Token refresh: request logic written in src/auth/refresh.ts, retry-on-401 not wired yet
+
+## Remaining
+- Logout endpoint
+- Integration tests for refresh
+
+## Decisions
+- Use httpOnly cookies instead of localStorage (XSS exposure)
+- Refresh at most once per request to avoid loops
+
+## Blockers and known problems
+- Backend refresh endpoint returns 500 when the refresh token is expired; reported to API team
+
+## Tests
+- `npm test` — **failed**: 1 failing: refresh retries twice on expired token
+
+## Relevant files
+- `src/auth/refresh.ts` — refresh logic, unfinished
+- `src/auth/login.ts`
+
+## Working tree at checkpoint
+**Modified (1)**
+- `src/auth/login.ts`
+**Untracked (1)**
+- `src/auth/refresh.ts`
+
+## Environment
+Processes reported as running at checkpoint time (they may have stopped; BRB does not restart them):
+- Dev server: npm run dev on port 5173 (started by Claude)
+
+## Notes
+API base URL comes from VITE_API_URL; do not hard-code it.
+
+## Resume guidance
+
+- Check the repository for changes made after this checkpoint before editing files.
+- This handoff records task context only. It is not a copy of the earlier conversation.

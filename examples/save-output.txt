@@ -1,0 +1,17 @@
+BRB — Checkpoint saved
+
+Project: my-awesome-app
+Branch: feature/authentication
+Checkpoint: ac194f4f
+
+✓ Development objective captured
+✓ 2 changed file paths recorded
+✓ Tasks saved: 3 completed, 1 in progress, 2 remaining
+✓ 2 decision(s), 1 blocker(s), 1 test result(s) recorded
+✓ Next action identified
+
+Next: In src/auth/refresh.ts, wire refreshToken() into the fetch wrapper so a 401 triggers one refresh and a retry; then run npm test.
+Saved to: ~/.brb/projects/my-awesome-app-3f79fc3bf9a7/checkpoints/20261011T075707545Z-manual-ac194f4f.json
+
+You can leave now.
+Run /brb:continue when you're back.

@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "checkpointId": "ac194f4f-e91f-4aa7-863c-fdf43f32fff9",
+  "createdAt": "2026-10-11T07:57:07.545Z",
+  "type": "manual",
+  "trigger": "manual",
+  "partial": false,
+  "producer": {
+    "name": "brb",
+    "version": "1.0.0-rc.1"
+  },
+  "session": {
+    "id": "0b6c1f8e-5f0a-4f4e-9d55-3f1f3b1f9a10"
+  },
+  "project": {
+    "root": "/home/dev/my-awesome-app",
+    "identity": "6f358ce8e8de6fb0cb346cc2458cdaa3",
+    "name": "my-awesome-app"
+  },
+  "git": {
+    "available": true,
+    "branch": "feature/authentication",
+    "detached": false,
+    "head": "fb95873b7b05609c557099c3d2e39b18cad6f604",
+    "upstream": null,
+    "remote": null,
+    "workingTree": {
+      "modified": [
+        "src/auth/login.ts"
+      ],
+      "added": [],
+      "deleted": [],
+      "renamed": [],
+      "untracked": [
+        "src/auth/refresh.ts"
+      ],
+      "conflicted": [],
+      "staged": [],
+      "total": 2,
+      "truncated": false
+    },
+    "fingerprint": "c45863f9dd8a66b971eda3e4682bc2603564bb18bc4651fc5129229ddd281dda"
+  },
+  "task": {
+    "source": "claude",
+    "objective": "Implement authentication: login, token storage and token refresh for the web client.",
+    "completed": [
+      "Login flow (src/auth/login.ts)",
+      "Token storage in httpOnly cookies",
+      "Error handling for 401 responses"
+    ],
+    "inProgress": [
+      "Token refresh: request logic written in src/auth/refresh.ts, retry-on-401 not wired yet"
+    ],
+    "remaining": [
+      "Logout endpoint",
+      "Integration tests for refresh"
+    ],
+    "nextAction": "In src/auth/refresh.ts, wire refreshToken() into the fetch wrapper so a 401 triggers one refresh and a retry; then run npm test."
+  },
+  "files": [
+    {
+      "path": "src/auth/refresh.ts",
+      "note": "refresh logic, unfinished"
+    },
+    {
+      "path": "src/auth/login.ts"
+    }
+  ],
+  "snapshot": {
+    "files": [
+      {
+        "path": "src/auth/login.ts",
+        "sha256": "33ff7db699903534b5b222ad28d5b49e05daa5e7bf604f523026a74e55fdf32b",
+        "size": 21
+      },
+      {
+        "path": "src/auth/refresh.ts",
+        "sha256": "6a1495774ced975ec8289e1c0bb5d4cebdc597b3d5eace69d8323fb42b8fb2c1",
+        "size": 11
+      }
+    ],
+    "truncated": false
+  },
+  "decisions": [
+    "Use httpOnly cookies instead of localStorage (XSS exposure)",
+    "Refresh at most once per request to avoid loops"
+  ],
+  "blockers": [
+    "Backend refresh endpoint returns 500 when the refresh token is expired; reported to API team"
+  ],
+  "assumptions": [],
+  "tests": [
+    {
+      "command": "npm test",
+      "result": "failed",
+      "summary": "1 failing: refresh retries twice on expired token"
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "nodeVersion": "v22.23.1",
+    "relevantTools": [],
+    "runningProcesses": [
+      "Dev server: npm run dev on port 5173 (started by Claude)"
+    ]
+  },
+  "context": null,
+  "notes": "API base URL comes from VITE_API_URL; do not hard-code it.",
+  "resume": {
+    "instructions": null,
+    "warnings": []
+  },
+  "redactions": 0,
+  "integrity": {
+    "algorithm": "sha256",
+    "digest": "0425f3c27863d5ad1441cc8eba9cce9051b16de958dbe46b525374c88fec2cba"
+  }
+}

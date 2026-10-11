@@ -1,0 +1,5 @@
+node_modules/
+build/
+*.log
+.DS_Store
+# dist/ is committed on purpose: Claude Code installs plugins from git without a build step.

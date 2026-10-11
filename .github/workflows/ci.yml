@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Configure git for tests
+        run: |
+          git config --global user.name "CI"
+          git config --global user.email "ci@example.invalid"
+          git config --global init.defaultBranch main
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Unit and integration tests
+        run: npm test
+      - name: Committed dist/ matches source; versions and plugin references agree
+        run: npm run verify:dist
+
+  package:
+    name: Package validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Validate JSON manifests
+        run: |
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" && echo "ok $f"
+          done
+      - name: Validate plugin with Claude Code
+        run: |
+          npm install --no-save @anthropic-ai/claude-code
+          npx claude plugin validate . --strict
+      - name: Package contents
+        run: npm pack --dry-run
+
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+      - name: No runtime dependencies
+        run: node -e "const p=require('./package.json'); if (p.dependencies && Object.keys(p.dependencies).length) { console.error('BRB must not have runtime dependencies'); process.exit(1) }"
+      - name: No network or shell APIs in runtime code
+        run: |
+          if grep -RnE "from 'node:(http|https|net|dgram|tls)'|fetch\(|child_process'.*\bexec\b|execSync|shell: *true" src/; then
+            echo "Forbidden API found in src/"; exit 1
+          fi
+      - name: No git write commands in runtime code
+        run: |
+          if grep -RnE "'(commit|push|stash|reset|checkout|clean|restore|rm|add|merge|rebase|switch)'" src/checkpoint/git.ts; then
+            echo "BRB must only run read-only git commands"; exit 1
+          fi

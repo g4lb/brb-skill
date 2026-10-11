@@ -1,0 +1,24 @@
+{
+  "name": "brb",
+  "owner": {
+    "name": "g4lb",
+    "email": "galevgi@gmail.com"
+  },
+  "metadata": {
+    "description": "BRB — You leave. Your context stays."
+  },
+  "plugins": [
+    {
+      "name": "brb",
+      "source": "./",
+      "description": "Pause with /brb, resume with /continue. Local, structured session checkpoints.",
+      "version": "1.0.0-rc.1",
+      "author": {
+        "name": "g4lb",
+        "email": "galevgi@gmail.com"
+      },
+      "license": "MIT",
+      "category": "productivity"
+    }
+  ]
+}
