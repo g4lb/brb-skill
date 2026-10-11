@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { gitTopLevel } from '../checkpoint/git.js';
-import { brbHome, projectIdentity, type ProjectIdentity } from '../checkpoint/paths.js';
+import { brbHome, normalizeRoot, projectIdentity, type ProjectIdentity } from '../checkpoint/paths.js';
 import { BrbError } from '../utils/errors.js';
 import { safeLine } from '../security/sanitize.js';
 import type { Checkpoint } from '../checkpoint/types.js';
@@ -73,11 +73,14 @@ export function resolveProject(cwd: string, env: NodeJS.ProcessEnv): ProjectIden
   const top = gitTopLevel(dir);
   const root = top ? path.resolve(top) : dir;
   const home = brbHome(env);
-  if (isSameOrInside(home, root)) {
+  // Compare normalized forms: project roots are case-folded on Windows.
+  const normHome = normalizeRoot(home);
+  const normRoot = normalizeRoot(root);
+  if (isSameOrInside(normHome, normRoot)) {
     throw new BrbError('NO_PROJECT', `Refusing to checkpoint BRB's own storage directory (${home}).`, 'Run BRB from your project directory.');
   }
   // Inside a git repository, checkpoints would show up as untracked files and change the state BRB compares.
-  if (top && isSameOrInside(root, home)) {
+  if (top && isSameOrInside(normRoot, normHome)) {
     throw new BrbError('CONFIG', `BRB_HOME (${home}) is inside this project; checkpoints must be stored outside the working tree.`, 'Set BRB_HOME to a directory outside the project, or unset it to use ~/.brb.');
   }
   return projectIdentity(root, home);

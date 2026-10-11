@@ -272,10 +272,13 @@ test('review: a checkpoint reported as saved always loads (redaction growth, lon
   assert.equal(r.code, 0, r.stdout);
   assert.doesNotMatch(r.stdout, /damaged/);
 
-  const longName = path.join(tmpDir(), 'n'.repeat(210));
-  fs.mkdirSync(longName);
-  assert.equal(save(longName, home).code, 0);
-  assert.equal(brb(longName, home, ['resume']).code, 0);
+  // Windows cannot start a process whose working directory exceeds MAX_PATH, so this part is POSIX-only.
+  if (!isWindows) {
+    const longName = path.join(tmpDir(), 'n'.repeat(210));
+    fs.mkdirSync(longName);
+    assert.equal(save(longName, home).code, 0);
+    assert.equal(brb(longName, home, ['resume']).code, 0);
+  }
 });
 
 test('review: edits inside a new untracked folder are detected', () => {
