@@ -1,18 +1,21 @@
 name: Release
 
-# Manual only. Builds, verifies and drafts a GitHub release; a maintainer publishes it.
+# Manual only. Verifies a tagged version and builds the release archive as a
+# workflow artifact. It does not create the GitHub release: a maintainer does
+# that from their own account (see docs/release.md), so releases are authored
+# by the maintainer, not by github-actions[bot].
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to release (must match package.json, e.g. 1.0.0)
+        description: Version to release (must match package.json, e.g. 1.0.1)
         required: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,14 +28,17 @@ jobs:
       - run: npm run check
       - name: Version matches input
         run: test "$(node -p "require('./package.json').version")" = "${{ inputs.version }}"
+      - name: Tag exists for this version
+        run: |
+          git fetch --tags --quiet
+          git rev-parse --verify --quiet "refs/tags/v${{ inputs.version }}" > /dev/null \
+            || { echo "Tag v${{ inputs.version }} not found; push it first"; exit 1; }
       - name: Build release archive
         run: |
           npm pack
           mv brb-claude-code-${{ inputs.version }}.tgz brb-${{ inputs.version }}.tgz
-      - name: Draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "v${{ inputs.version }}" brb-${{ inputs.version }}.tgz \
-            --draft --title "BRB v${{ inputs.version }}" \
-            --notes "See CHANGELOG.md for details."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brb-${{ inputs.version }}
+          path: brb-${{ inputs.version }}.tgz
+          if-no-files-found: error

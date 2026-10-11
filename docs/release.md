@@ -24,9 +24,19 @@ The version appears in four places, and `npm run verify:dist` fails if they disa
    ls ~/.brb                                   # checkpoints still there
    ```
 9. [ ] On Windows, run `/brb` and `/brb:continue` once by hand, and trigger `/compact` with Auto-BRB on.
-10. [ ] Commit, then tag: `claude plugin tag plugin` (creates `brb--v<version>`) or `git tag v<version>`.
-11. [ ] Push the tag and run the **Release** workflow (manual dispatch). It drafts a GitHub release with the packed archive.
-12. [ ] Review and publish the draft.
+10. [ ] Commit, then create an annotated tag: `git tag -a v<version> -m "BRB v<version>"`. The Release workflow expects the `v<version>` form.
+11. [ ] Push the commit and the tag (`git push origin main && git push origin v<version>`), then run the **Release** workflow:
+    ```bash
+    gh workflow run release.yml -f version=<version> --ref v<version>
+    gh run watch "$(gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
+    ```
+    It re-runs `npm run check` on the tag and uploads `brb-<version>.tgz` as an artifact. It does **not** create the release.
+12. [ ] Create the release from your own account, so you are its author (not `github-actions[bot]`):
+    ```bash
+    gh run download "$(gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')" -n brb-<version>
+    gh release create v<version> brb-<version>.tgz --verify-tag --title "BRB v<version>" --notes-file <notes.md>
+    ```
+    Write the notes from the `CHANGELOG.md` section. Add `--draft` to review on GitHub before publishing.
 13. [ ] Optional: submit to a Claude Code plugin marketplace, following its current publication requirements.
 
 Never publish, push or tag from automation without a maintainer's explicit decision.
