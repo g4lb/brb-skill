@@ -12,7 +12,7 @@
       "name": "brb",
       "source": "./plugin",
       "description": "Pause with /brb, resume with /continue. Local, structured session checkpoints.",
-      "version": "1.0.0-rc.1",
+      "version": "1.0.0",
       "author": {
         "name": "g4lb",
         "email": "galevgi@gmail.com"

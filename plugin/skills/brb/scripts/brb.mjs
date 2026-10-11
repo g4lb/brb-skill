@@ -71,7 +71,7 @@ function isSensitivePath(p) {
 }
 
 // src/version.ts
-var VERSION = "1.0.0-rc.1";
+var VERSION = "1.0.0";
 
 // src/checkpoint/git.ts
 import { execFileSync } from "node:child_process";

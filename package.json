@@ -1,6 +1,6 @@
 {
   "name": "brb-claude-code",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "BRB \u2014 Be Right Back. Pause and resume Claude Code sessions with structured, local checkpoints.",
   "license": "MIT",
   "author": "g4lb <galevgi@gmail.com>",

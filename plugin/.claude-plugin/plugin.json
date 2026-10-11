@@ -1,6 +1,6 @@
 {
   "name": "brb",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "Be Right Back: pause with /brb, resume with /continue. Structured, local checkpoints of your task, decisions, tests and repository state, with optional automatic checkpoints before compaction and at session end.",
   "author": {
     "name": "g4lb",
@@ -9,5 +9,12 @@
   "homepage": "https://github.com/g4lb/brb-skill",
   "repository": "https://github.com/g4lb/brb-skill",
   "license": "MIT",
-  "keywords": ["checkpoint", "resume", "handoff", "session", "context", "productivity"]
+  "keywords": [
+    "checkpoint",
+    "resume",
+    "handoff",
+    "session",
+    "context",
+    "productivity"
+  ]
 }

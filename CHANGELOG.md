@@ -4,6 +4,10 @@ All notable changes to this project are documented here. This project follows [S
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-10-11
+
+First stable release. Install with `/plugin marketplace add g4lb/brb-skill` then `/plugin install brb@brb`, or skills only with `npx skills add g4lb/brb-skill`.
+
 ### Changed
 
 - The installable plugin lives in `plugin/` with no `package.json`, so installing never runs `npm install` (it previously pulled ~47 MB of development dependencies).
@@ -30,9 +34,9 @@ First release candidate.
 - Secret redaction, sensitive-path skipping, symlink and traversal protection, atomic writes, per-project locking.
 - Unit, integration and Claude Code end-to-end tests. CI on Linux, macOS and Windows.
 
-### Known limitations
+### Known limitations (still apply in 1.0.0)
 
+- Windows: unit and integration tests pass in CI, but `/brb`, resume and the Auto-BRB hooks have not been exercised by hand inside Claude Code on Windows.
 - As a plugin, resume is `/brb:continue` (`/brb continue` works everywhere).
-- Windows hook execution not yet verified end to end in Claude Code.
 
 Verified against Claude Code 2.1.289.
