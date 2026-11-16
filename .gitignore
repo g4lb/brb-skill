@@ -3,3 +3,6 @@ build/
 *.log
 .DS_Store
 # plugin/skills/*/scripts/brb.mjs is committed on purpose: plugins and skills install from git without a build step.
+# Planning docs stay local.
+docs/superpowers/
+docs/brb-lite-design.md
