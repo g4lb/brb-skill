@@ -1,0 +1,25 @@
+{
+  "name": "brb-lite",
+  "displayName": "BRB Lite — Be Right Back",
+  "version": "1.0.0",
+  "description": "Pause with /brb-lite:brb, resume with /brb-lite:continue. Saves a readable Markdown checkpoint of your task in the project's .brb folder. No hooks, no scripts.",
+  "author": {
+    "name": "g4lb",
+    "email": "galevgi@gmail.com"
+  },
+  "homepage": "https://github.com/g4lb/brb-skill",
+  "repository": "https://github.com/g4lb/brb-skill",
+  "documentationUrl": "https://github.com/g4lb/brb-skill/tree/main/lite#readme",
+  "supportUrl": "https://github.com/g4lb/brb-skill/issues",
+  "privacyPolicyUrl": "https://github.com/g4lb/brb-skill/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/g4lb/brb-skill/blob/main/LICENSE",
+  "license": "MIT",
+  "keywords": [
+    "checkpoint",
+    "resume",
+    "handoff",
+    "session",
+    "context",
+    "productivity"
+  ]
+}
