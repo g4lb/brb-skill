@@ -4,6 +4,10 @@ All notable changes to this project are documented here. This project follows [S
 
 ## [Unreleased]
 
+### Added
+
+- `lite/`: a skills-only edition of BRB (plugin name `brb`) with no hooks and no scripts, for the Claude plugin directory, which accepts hooks and scripts only from Verified organizations. `/brb:brb` saves a Markdown checkpoint to `.brb/checkpoint.md` in the project and `/brb:continue` resumes from it. It leaves out Auto-BRB, the management commands, secret redaction and file hashes. The `g4lb/brb-skill` marketplace keeps installing full BRB.
+
 ### Security
 
 - BRB runs `git` with an allowlisted environment (PATH, home and config locations, temp directory, Windows system variables, locale). Tokens, API keys and other variables from your environment no longer reach the `git` child process.

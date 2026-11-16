@@ -70,7 +70,7 @@ if (!existsSync(manifest)) problem(manifest, 'missing');
 else {
   try {
     const name = JSON.parse(readFileSync(manifest, 'utf8')).name;
-    if (root.replace(/[\\/]+$/, '') === 'lite' && name !== 'brb-lite') problem(manifest, `name must be "brb-lite" (is ${JSON.stringify(name)})`);
+    if (root.replace(/[\\/]+$/, '') === 'lite' && name !== 'brb') problem(manifest, `name must be "brb" (is ${JSON.stringify(name)})`);
   } catch {
     problem(manifest, 'not valid JSON');
   }

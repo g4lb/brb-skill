@@ -1,8 +1,8 @@
 {
-  "name": "brb-lite",
-  "displayName": "BRB Lite — Be Right Back",
+  "name": "brb",
+  "displayName": "BRB — Be Right Back",
   "version": "1.0.0",
-  "description": "Pause with /brb-lite:brb, resume with /brb-lite:continue. Saves a readable Markdown checkpoint of your task in the project's .brb folder. No hooks, no scripts.",
+  "description": "Pause with /brb:brb, resume with /brb:continue. Saves a readable Markdown checkpoint of your task in the project's .brb folder. No hooks, no scripts.",
   "author": {
     "name": "g4lb",
     "email": "galevgi@gmail.com"

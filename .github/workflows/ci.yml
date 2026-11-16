@@ -50,7 +50,7 @@ jobs:
       - run: npm ci
       - name: Validate JSON manifests
         run: |
-          for f in plugin/.claude-plugin/plugin.json .claude-plugin/marketplace.json plugin/hooks/hooks.json; do
+          for f in plugin/.claude-plugin/plugin.json lite/.claude-plugin/plugin.json .claude-plugin/marketplace.json plugin/hooks/hooks.json; do
             node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" && echo "ok $f"
           done
       - name: Validate plugin with Claude Code
@@ -58,6 +58,9 @@ jobs:
           npm install --no-save @anthropic-ai/claude-code
           npx claude plugin validate . --strict
           npx claude plugin validate plugin --strict
+          npx claude plugin validate lite --strict --profile directory
+      - name: BRB Lite meets the plugin directory's file rules
+        run: node scripts/verify-lite.mjs
       - name: Package contents
         run: npm pack --dry-run
 

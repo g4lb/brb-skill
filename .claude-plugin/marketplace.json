@@ -19,18 +19,6 @@
       },
       "license": "MIT",
       "category": "productivity"
-    },
-    {
-      "name": "brb-lite",
-      "source": "./lite",
-      "description": "Skills-only BRB: pause and resume with a Markdown checkpoint. No hooks, no scripts.",
-      "version": "1.0.0",
-      "author": {
-        "name": "g4lb",
-        "email": "galevgi@gmail.com"
-      },
-      "license": "MIT",
-      "category": "productivity"
     }
   ]
 }

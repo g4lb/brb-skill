@@ -1,16 +1,16 @@
 ---
 name: brb
-description: Pause the current coding work and save a BRB Lite checkpoint (objective, progress, next step, decisions, tests, repository state) as a Markdown file in the project, so the work can be resumed later, even in a new session. Use when the developer runs /brb-lite:brb, or says they need to leave or pause, for example "brb", "be right back", "I need to leave", "pause my work", "save where we are", "I'm heading out".
+description: Pause the current coding work and save a BRB checkpoint (objective, progress, next step, decisions, tests, repository state) as a Markdown file in the project, so the work can be resumed later, even in a new session. Use when the developer runs /brb:brb, or says they need to leave or pause, for example "brb", "be right back", "I need to leave", "pause my work", "save where we are", "I'm heading out".
 argument-hint: "[note]"
 ---
 
-# BRB Lite — pause work
+# BRB — pause work
 
-BRB Lite saves a checkpoint file so the developer can leave and resume later with `/brb-lite:continue`. You write the file yourself. There is no BRB program to run.
+BRB saves a checkpoint file so the developer can leave and resume later with `/brb:continue`. You write the file yourself. There is no BRB program to run.
 
 Arguments given: `$ARGUMENTS`
 
-If the first word of the arguments is `continue` or `resume`, do not use this skill. Invoke this plugin's `continue` skill instead (`brb-lite:continue`). Otherwise, treat the arguments as a note from the developer.
+If the first word of the arguments is `continue` or `resume`, do not use this skill. Invoke this plugin's `continue` skill instead (`brb:continue`). Otherwise, treat the arguments as a note from the developer.
 
 ## 0. Tell the developer right away
 
@@ -57,7 +57,7 @@ Then, with the Write tool:
 
 1. If `<root>/.brb/checkpoint.md` exists, read it and write its content unchanged to `<root>/.brb/checkpoint.prev.md`.
 2. Write `<root>/.brb/.gitignore` with exactly one line: `*`
-3. Write `<root>/.brb/checkpoint.md` in this format. Leave out empty sections, except Objective and Next action. Keep the headings exactly as written: `/brb-lite:continue` reads them.
+3. Write `<root>/.brb/checkpoint.md` in this format. Leave out empty sections, except Objective and Next action. Keep the headings exactly as written: `/brb:continue` reads them.
 
 ````markdown
 # BRB checkpoint
@@ -123,14 +123,14 @@ Then, with the Write tool:
 Copy this into your reply, filled in, inside a ```text code block:
 
 ```text
-⏸ BRB Lite — checkpoint saved
+⏸ BRB — checkpoint saved
 File:    <root>/.brb/checkpoint.md
 Branch:  <branch>   HEAD: <first 7 characters, or "no commits">
 Changed: <number of working tree lines> files
 Next:    <next action, one line>
 ```
 
-Then write: `Resume with /brb-lite:continue`. If you could not write the file, say clearly that the checkpoint was **not** saved, and why.
+Then write: `Resume with /brb:continue`. If you could not write the file, say clearly that the checkpoint was **not** saved, and why.
 
 Then stop. Do not continue the task after a pause.
 
@@ -140,4 +140,4 @@ The developer may be away. Background work keeps running, and when it finishes y
 
 - When a background task notification arrives after the pause, write one line: what finished, and whether it succeeded. Then stop.
 - Do not start the next step. Do not commit, push, open or merge pull requests, deploy, edit files, or start or message agents.
-- Continue only when the developer writes again, for example with `/brb-lite:continue`.
+- Continue only when the developer writes again, for example with `/brb:continue`.

@@ -37,7 +37,7 @@
     "test:e2e": "npm run build && bash tests/e2e/claude-e2e.sh",
     "verify:dist": "node scripts/verify-dist.mjs",
     "validate:plugin": "claude plugin validate . --strict && claude plugin validate plugin --strict",
-    "check": "npm run typecheck && npm run lint && npm test && npm run verify:dist",
+    "check": "npm run typecheck && npm run lint && npm test && npm run verify:dist && npm run verify:lite",
     "verify:lite": "node scripts/verify-lite.mjs"
   },
   "devDependencies": {
