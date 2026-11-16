@@ -16,6 +16,8 @@ const IMAGE = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico']);
 const FORBIDDEN_DIRS = new Set(['hooks', 'bin', 'scripts', 'commands', 'agents']);
 const FORBIDDEN_FILES = new Set(['hooks.json', '.mcp.json', '.lsp.json', 'monitors.json']);
 const MANIFEST_FILES = new Set(['plugin.json', 'icon.png']);
+// plugin.json can declare hooks, servers, commands and agents inline, without a file.
+const FORBIDDEN_MANIFEST_KEYS = ['hooks', 'mcpServers', 'lspServers', 'monitors', 'commands', 'agents', 'modules', 'outputStyles'];
 
 const fail = [];
 const problem = (file, reason) => fail.push(`${file}: ${reason}`);
@@ -69,7 +71,9 @@ const manifest = join(root, '.claude-plugin', 'plugin.json');
 if (!existsSync(manifest)) problem(manifest, 'missing');
 else {
   try {
-    const name = JSON.parse(readFileSync(manifest, 'utf8')).name;
+    const json = JSON.parse(readFileSync(manifest, 'utf8'));
+    for (const key of FORBIDDEN_MANIFEST_KEYS) if (key in json) problem(manifest, `"${key}" is not allowed`);
+    const name = json.name;
     if (root.replace(/[\\/]+$/, '') === 'lite' && name !== 'brb') problem(manifest, `name must be "brb" (is ${JSON.stringify(name)})`);
   } catch {
     problem(manifest, 'not valid JSON');
