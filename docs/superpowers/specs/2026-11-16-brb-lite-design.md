@@ -1,6 +1,6 @@
 # BRB Lite — design
 
-Date: 2026-11-16 · Status: draft, waiting for approval
+Date: 2026-11-16 · Status: approved. Update (same day): at the developer's request the plugin is named `brb`, not `brb-lite` (commands `/brb:brb`, `/brb:continue`), and it is not listed in the `g4lb/brb-skill` marketplace, which keeps full BRB.
 
 ## Why
 
