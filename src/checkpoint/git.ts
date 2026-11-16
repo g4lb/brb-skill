@@ -11,6 +11,28 @@ export interface GitRunner {
   (args: string[], cwd: string): { ok: true; stdout: string } | { ok: false; error: string; notFound?: boolean };
 }
 
+/**
+ * Environment variables git may need to find itself, the user's config and a temp directory.
+ * Everything else (tokens, API keys, other credentials) is left out of git's environment.
+ */
+const GIT_ENV_ALLOWLIST = new Set([
+  'PATH', 'HOME', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'XDG_CONFIG_HOME',
+  'TMPDIR', 'TMP', 'TEMP', 'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'PATHEXT',
+  'LANG', 'GIT_CONFIG_NOSYSTEM', 'GIT_CEILING_DIRECTORIES',
+]);
+
+/** Build git's environment from an allowlist, so no credential in the caller's environment reaches git. */
+export function gitEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const out: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (value !== undefined && GIT_ENV_ALLOWLIST.has(key.toUpperCase())) out[key] = value;
+  }
+  out.GIT_TERMINAL_PROMPT = '0';
+  out.GIT_OPTIONAL_LOCKS = '0';
+  out.LC_ALL = 'C';
+  return out;
+}
+
 /** Run git without a shell. Read-only commands only. */
 export const runGit: GitRunner = (args, cwd) => {
   try {
@@ -21,7 +43,7 @@ export const runGit: GitRunner = (args, cwd) => {
       maxBuffer: 64 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0', LC_ALL: 'C' },
+      env: gitEnv(),
     });
     return { ok: true, stdout };
   } catch (err) {

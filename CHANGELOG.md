@@ -4,6 +4,10 @@ All notable changes to this project are documented here. This project follows [S
 
 ## [Unreleased]
 
+### Security
+
+- BRB runs `git` with an allowlisted environment (PATH, home and config locations, temp directory, Windows system variables, locale). Tokens, API keys and other variables from your environment no longer reach the `git` child process.
+
 ## [1.1.0] — 2026-10-11
 
 ### Fixed

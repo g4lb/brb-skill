@@ -281,6 +281,34 @@ function withLock(lockDir, fn, opts = {}) {
 // src/checkpoint/git.ts
 var MAX_ENTRIES = 1e3;
 var GIT_TIMEOUT_MS = 15e3;
+var GIT_ENV_ALLOWLIST = /* @__PURE__ */ new Set([
+  "PATH",
+  "HOME",
+  "USERPROFILE",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "XDG_CONFIG_HOME",
+  "TMPDIR",
+  "TMP",
+  "TEMP",
+  "SYSTEMROOT",
+  "WINDIR",
+  "COMSPEC",
+  "PATHEXT",
+  "LANG",
+  "GIT_CONFIG_NOSYSTEM",
+  "GIT_CEILING_DIRECTORIES"
+]);
+function gitEnv(env = process.env) {
+  const out = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (value !== void 0 && GIT_ENV_ALLOWLIST.has(key.toUpperCase())) out[key] = value;
+  }
+  out.GIT_TERMINAL_PROMPT = "0";
+  out.GIT_OPTIONAL_LOCKS = "0";
+  out.LC_ALL = "C";
+  return out;
+}
 var runGit = (args, cwd) => {
   try {
     const stdout = execFileSync("git", ["-c", "core.quotepath=off", "--no-optional-locks", ...args], {
@@ -290,7 +318,7 @@ var runGit = (args, cwd) => {
       maxBuffer: 64 * 1024 * 1024,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
-      env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" }
+      env: gitEnv()
     });
     return { ok: true, stdout };
   } catch (err) {
