@@ -55,8 +55,8 @@ Rules:
 
 Then, with the Write tool:
 
-1. If `<root>/.brb/checkpoint.md` exists, read it and write its content unchanged to `<root>/.brb/checkpoint.prev.md`.
-2. Write `<root>/.brb/.gitignore` with exactly one line: `*`
+1. If `<root>/.brb/checkpoint.md` exists, read it. If `<root>/.brb/checkpoint.prev.md` exists, read it too (the Write tool only overwrites files you have read). Then write the content of `checkpoint.md` unchanged to `checkpoint.prev.md`. If this fails, stop: say the checkpoint was **not** saved and why. Do not overwrite `checkpoint.md` before the old content is safe in `checkpoint.prev.md`.
+2. If `<root>/.brb/.gitignore` does not exist, write it with exactly one line: `*`
 3. Write `<root>/.brb/checkpoint.md` in this format. Leave out empty sections, except Objective and Next action. Keep the headings exactly as written: `/brb:continue` reads them.
 
 ````markdown
