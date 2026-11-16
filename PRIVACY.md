@@ -1,6 +1,6 @@
 # Privacy policy
 
-_Last updated: 2026-10-11 · Applies to BRB (Be Right Back) by g4lb_
+_Last updated: 2026-11-16 · Applies to BRB (Be Right Back) by g4lb_
 
 **Short version:** BRB collects nothing, sends nothing anywhere, and has no servers. Everything it saves stays on your computer.
 
@@ -27,6 +27,17 @@ Claude Code itself sends your conversation, including checkpoint content that Cl
 - See your checkpoints with `/brb list`, and export them with `/brb export`.
 - Delete them with `/brb delete <id>` or `/brb clean`, or remove the `~/.brb` folder.
 - Uninstalling BRB does not delete your checkpoints. Remove `~/.brb` yourself if you want them gone.
+
+## Skills-only edition (Claude plugin directory)
+
+The edition listed in the Claude plugin directory (the `lite/` folder of this repository) has no program of its own. Claude follows its instructions and:
+
+- Writes the checkpoint to `.brb/checkpoint.md` inside your project, and keeps the previous one as `.brb/checkpoint.prev.md`. The `.brb/` folder has its own `.gitignore`, so git ignores it. Outside a git repository, the folder is created in the current directory.
+- Records the same task summary and repository metadata as above, but no file fingerprints and no prompts.
+- Does not filter secrets automatically. Its instructions tell Claude never to write secrets, tokens, passwords, keys or `.env` values, but nothing checks this.
+- Has no network access and changes nothing in your repository except the `.brb/` folder.
+
+To delete its checkpoints, remove the `.brb/` folder in your project.
 
 ## Contact
 
